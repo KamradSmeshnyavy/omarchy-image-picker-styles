@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "id": "kamradsmeshnyavy.image-picker",
-  "name": "My Image picker",
+  "name": "Image Picker Styles",
   "version": "1.0.0",
-  "author": "Omarchy",
-  "description": "Image-grid selector overlay used for wallpapers, themes, and any other directory of images",
+  "author": "KamradSmeshnyavy",
+  "description": "Omarchy theme and wallpaper picker with six styles: slices, cards, coverflow, polaroid, strip, wide",
   "kinds": [
     "overlay"
   ],
@@ -14,5 +14,6 @@
   },
   "omarchy": {
     "clonedFrom": "omarchy.image-picker"
-  }
+  },
+  "homepage": "https://github.com/KamradSmeshnyavy/omarchy-image-picker-styles"
 }
