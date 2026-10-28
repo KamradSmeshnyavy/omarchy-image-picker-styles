@@ -46,6 +46,16 @@ echo '{"style": "coverflow"}' > ~/.config/omarchy/image-picker.json
 В [моих dotfiles](https://github.com/KamradSmeshnyavy/dotfiles) стиль и числа подбираются в оверлее
 Customizer; он же кэширует миниатюры после смены темы, поэтому пикеры с сотнями обоев открываются мгновенно.
 
+## Вместе с Customizer
+
+[omarchy-customizer](https://github.com/KamradSmeshnyavy/omarchy-customizer) — один оверлей (Super+Shift+T) с живым предпросмотром для настроек этого
+плагина и всего остального оформления: темы, обои, анимации Hyprland, прозрачность, блюр, шейдеры экрана.
+Одна команда ставит его и предлагает этот плагин и остальные:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/KamradSmeshnyavy/omarchy-customizer/main/install.sh | bash
+```
+
 ## Лицензия
 
 MIT. Основано на `omarchy.image-picker` из [Omarchy](https://github.com/basecamp/omarchy) (MIT, © David
