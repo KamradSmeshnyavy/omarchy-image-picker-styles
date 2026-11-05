@@ -4,6 +4,7 @@
   "name": "Image Picker Styles",
   "version": "1.0.0",
   "author": "KamradSmeshnyavy",
+  "license": "MIT",
   "description": "Omarchy theme and wallpaper picker with six styles: slices, cards, coverflow, polaroid, strip, wide",
   "kinds": [
     "overlay"

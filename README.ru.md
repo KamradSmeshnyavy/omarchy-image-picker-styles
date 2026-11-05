@@ -20,7 +20,22 @@ echo '{"style": "coverflow"}' > ~/.config/omarchy/image-picker.json
 Открывается как обычно: Super+Shift+Ctrl+Space (темы) или Super+Ctrl+Space (обои). Вернуть стоковый
 пикер: `omarchy plugin enable omarchy.image-picker`.
 
-Проверено на Omarchy 4.0.6 и Quickshell 0.3.2.
+
+## Требования
+
+Omarchy 4 (Quattro) с его оболочкой. Проверено на Omarchy 4.0.6 и Quickshell 0.3.2.
+
+- Необязательно: `libvips` — быстрые миниатюры (`omarchy pkg add libvips`).
+
+## Удаление
+
+```sh
+omarchy plugin enable omarchy.image-picker      # сначала вернуть стоковый
+omarchy plugin remove kamradsmeshnyavy.image-picker
+omarchy restart shell
+```
+
+Настройки остаются в `~/.config/omarchy/image-picker.json` — удалите их вручную, если не нужны.
 
 ## Настройки — `~/.config/omarchy/image-picker.json`
 

@@ -21,7 +21,22 @@ echo '{"style": "coverflow"}' > ~/.config/omarchy/image-picker.json
 Open it as usual: Super+Shift+Ctrl+Space (themes) or Super+Ctrl+Space (wallpapers). Back to the stock
 picker: `omarchy plugin enable omarchy.image-picker`.
 
-Tested on Omarchy 4.0.6 with Quickshell 0.3.2.
+
+## Requirements
+
+Omarchy 4 (Quattro) with its shell. Tested on Omarchy 4.0.6 with Quickshell 0.3.2.
+
+- Optional: `libvips` for faster thumbnails (`omarchy pkg add libvips`).
+
+## Uninstall
+
+```sh
+omarchy plugin enable omarchy.image-picker      # switch back to the stock one first
+omarchy plugin remove kamradsmeshnyavy.image-picker
+omarchy restart shell
+```
+
+Your settings stay in `~/.config/omarchy/image-picker.json` — delete them by hand if you don't need them.
 
 ## Settings — `~/.config/omarchy/image-picker.json`
 
