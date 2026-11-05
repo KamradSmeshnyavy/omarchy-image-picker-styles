@@ -343,6 +343,11 @@ Item {
     }
   }
 
+  Process {
+    id: themeSwitchProc
+    command: ["bash", "-c", "theme=$(omarchy-theme-switcher) && [[ -n $theme ]] && setsid -f omarchy-theme-set \"$theme\" >/dev/null 2>&1"]
+  }
+
   // Lifecycle hooks invoked by omarchy-shell summon/hide. shell.summon(id,
   // payloadJson) hands the JSON to open() here; shell.hide(id) calls close().
   // The shell host owns the stable `image-selector` IPC target and forwards
@@ -351,6 +356,14 @@ Item {
     var args = {}
     if (payload) {
       try { args = JSON.parse(payload) || {} } catch (e) { args = {} }
+    }
+    // Omarchy 4.5: the theme menu (Super+Shift+Ctrl+Space, Super+Ctrl+T, menu → Theme) summons
+    // the picker with {"source":"themes"} and expects it to list and apply themes itself.
+    // Here the stock switcher does that: it builds the rows and opens this picker through
+    // `image-selector open`, and the chosen theme is applied after it.
+    if (args.source === "themes") {
+      if (!themeSwitchProc.running) themeSwitchProc.running = true
+      return
     }
     var dirs = String(args.imageDirs || imageDirs)
     var rows = String(args.imageRows || "")
