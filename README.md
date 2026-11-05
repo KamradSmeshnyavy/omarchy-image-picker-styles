@@ -26,7 +26,7 @@ picker: `omarchy plugin enable omarchy.image-picker`.
 
 Omarchy 4 (Quattro) with its shell. Tested on Omarchy 4.0.6 with Quickshell 0.3.2.
 
-- Optional: `libvips` for faster thumbnails (`omarchy pkg add libvips`).
+- Optional: `libvips` for faster thumbnails (package `libvips`).
 
 ## Uninstall
 
@@ -67,10 +67,10 @@ pickers open instantly with hundreds of wallpapers.
 
 [omarchy-customizer](https://github.com/KamradSmeshnyavy/omarchy-customizer) is one overlay (Super+Shift+T) with live preview for this plugin's settings and
 the rest of the look & feel: themes, wallpapers, Hyprland animations, transparency, blur, screen shaders.
-One command installs it and offers this plugin and the others:
+Install it next to this plugin (it finds the other companions on its own):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/KamradSmeshnyavy/omarchy-customizer/main/install.sh | bash
+omarchy plugin add https://github.com/KamradSmeshnyavy/omarchy-customizer --enable
 ```
 
 ## License
