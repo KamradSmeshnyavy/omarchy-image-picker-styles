@@ -57,7 +57,7 @@ key means "use the style's (or the theme's) value".
 | `scrimAlpha` | background scrim alpha; -1 — from the theme |
 | `labels` | `true` — always show names |
 
-Changes against the stock `ImagePicker.qml` are marked `// picker:`.
+Changes against the stock `ImagePicker.qml` are marked `// picker:`. `list.sh` is rewritten for speed (one `stat` and one `awk` over the thumbnail index for all images instead of per image): 13 wallpapers 0.6 s → 0.09 s, 150 theme previews 2.2 s → 0.11 s, same output.
 
 In [my dotfiles](https://github.com/KamradSmeshnyavy/dotfiles) the style and numbers are tuned in the
 Customizer overlay, which can also pre-cache thumbnails after every theme change — that is what makes the
