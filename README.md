@@ -8,6 +8,8 @@ unchanged.
 
 ![Styles](screenshots/styles.webp)
 
+<!-- Demo video: repo-videos/omarchy-image-picker-styles.mp4 — drag it here when editing this file on GitHub -->
+
 `slices` (stock), `cards`, `coverflow`, `polaroid`, `strip`, `wide`.
 
 ## Install
