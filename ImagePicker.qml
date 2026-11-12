@@ -616,6 +616,15 @@ Item {
                   anchors.fill: parent
                   color: Util.alpha(root.dimColor, item.selected ? 0 : root.dimUnselected)
                 }
+
+                // picker: живые обои (видео, GIF — играет owe) — значок ▶ в углу.
+                Rectangle {
+                  visible: ImagePickerModel.isLive(item.filePath)
+                  anchors { right: image.right; bottom: image.bottom; margins: 8 }
+                  width: 28; height: 28; radius: 14
+                  color: Util.alpha("#000000", 0.55)
+                  Text { anchors.centerIn: parent; anchors.horizontalCenterOffset: 1; text: "▶"; color: "#ffffff"; font.pixelSize: 12 }
+                }
               }
 
               // picker: рамка без скоса — скруглённая.

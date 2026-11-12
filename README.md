@@ -40,6 +40,12 @@ omarchy restart shell
 
 Your settings stay in `~/.config/omarchy/image-picker.json` — delete them by hand if you don't need them.
 
+## Live wallpapers
+
+Videos (`mp4` `webm` `mkv` `mov` `m4v`) are listed next to images; Omarchy's wallpaper engine
+[owe](https://github.com/omacom/owe) plays them. Their thumbnail is a frame grabbed by `ffmpeg` on first show (same cache
+as images), live wallpapers (video and GIF) carry a ▶ badge, and typing `live` in a filterable picker leaves only them.
+
 ## Settings — `~/.config/omarchy/image-picker.json`
 
 Read on the fly. `style` picks a preset; every other key overrides one number of it. `0` / `-1` or a missing

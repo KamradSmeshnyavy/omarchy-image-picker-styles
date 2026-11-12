@@ -33,12 +33,18 @@ function loadRows(rows) {
   return images
 }
 
+function isLive(path) {
+  return /\.(mp4|webm|mkv|mov|m4v|gif)$/i.test(String(path || ""))
+}
+
 function itemMatches(images, index, filterText) {
   if (!Array.isArray(images) || index < 0 || index >= images.length) return false
   var needle = String(filterText || "").toLowerCase()
   if (!needle) return true
 
   var path = String(images[index].filePath || "")
+  // picker: «live» / «живые» — только живые обои (видео и GIF, их играет owe).
+  if (needle === "live" || needle === "живые") return isLive(path)
   return nameForPath(path).toLowerCase().indexOf(needle) !== -1
       || labelForPath(path).toLowerCase().indexOf(needle) !== -1
 }

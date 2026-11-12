@@ -6,6 +6,8 @@
 # ~2.2 с. Здесь: один stat на все картинки, один awk по индексу на все, md5sum — только для тех, кого
 # в индексе нет. Вывод тот же (поиск по индексу, ключ md5 «путь<TAB>размер:mtime», старые миниатюры
 # по md5 содержимого).
+# Живые обои (видео — их играет owe): mp4 / webm / mkv / mov / m4v в списке тоже; миниатюры для них
+# нет у стокового кэша — при первом показе её делает ffmpeg (кадр на 1-й секунде) в тот же кэш.
 
 image_dirs=${1:-}
 cache_dir=${XDG_CACHE_HOME:-$HOME/.cache}/omarchy/image-selector
@@ -17,7 +19,8 @@ mapfile -d '' -t images < <(
   while IFS= read -r dir; do
     [[ -n $dir && -d $dir ]] || continue
     find -L "$dir" -maxdepth 1 -type f \
-      \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.gif' -o -iname '*.bmp' -o -iname '*.webp' \) \
+      \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.gif' -o -iname '*.bmp' -o -iname '*.webp' \
+         -o -iname '*.mp4' -o -iname '*.webm' -o -iname '*.mkv' -o -iname '*.mov' -o -iname '*.m4v' \) \
       -print0 2>/dev/null
   done <<<"$image_dirs" | sort -z
 )
@@ -55,6 +58,11 @@ for image in "${images[@]}"; do
     legacy_hash=$(md5sum "$image" 2>/dev/null)
     legacy_hash=${legacy_hash%% *}
     [[ -n $legacy_hash && -f $cache_dir/$legacy_hash.jpg ]] && thumbnail="$cache_dir/$legacy_hash.jpg"
+  fi
+  if [[ ! -f $thumbnail && ${image,,} =~ \.(mp4|webm|mkv|mov|m4v)$ ]] && command -v ffmpeg >/dev/null; then
+    thumbnail="$cache_dir/$h.jpg"
+    ffmpeg -nostdin -loglevel error -y -ss 1 -i "$image" -frames:v 1 -vf 'scale=640:-2' "$thumbnail" 2>/dev/null ||
+      ffmpeg -nostdin -loglevel error -y -i "$image" -frames:v 1 -vf 'scale=640:-2' "$thumbnail" 2>/dev/null
   fi
   if [[ -f $thumbnail ]]; then
     printf '%s\t%s\n' "$image" "$thumbnail"
