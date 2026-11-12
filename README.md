@@ -10,7 +10,7 @@ unchanged.
 
 <!-- Demo video: repo-videos/omarchy-image-picker-styles.mp4 — drag it here when editing this file on GitHub -->
 
-`slices` (stock), `cards`, `coverflow`, `polaroid`, `strip`, `wide`, `honeycomb` (a big hexagon in the middle, neighbours in rings of hexagons around it — after Vitreus), `dots` (round thumbnails; the preview assembles from dots in a wave, `shaders/dots.frag` — after glyph-rice).
+`slices` (stock), `cards`, `coverflow`, `polaroid`, `strip`, `wide`, `honeycomb` (all wallpapers as a full-screen grid of rounded hexagons, every other row shifted by half a cell, the selected one bigger; `j` / `k` or `↑` / `↓` — a row down / up — after Vitreus), `dots` (round thumbnails; the preview assembles from dots in a wave, `shaders/dots.frag` — after glyph-rice).
 
 ## Install
 
@@ -45,7 +45,7 @@ Your settings stay in `~/.config/omarchy/image-picker.json` — delete them by h
 Videos (`mp4` `webm` `mkv` `mov` `m4v`) are listed next to images; Omarchy's wallpaper engine
 [owe](https://github.com/omacom/owe) plays them. Their thumbnail is a frame grabbed by `ffmpeg` on first show (same cache
 as images), live wallpapers (video and GIF) carry a ▶ badge, and typing `live` in a filterable picker leaves only them. When the list has live wallpapers, a switch above the carousel
-shows **All · Static · Animated** — `j` / `k` or `↑` / `↓` (`Ctrl+j` / `Ctrl+k` in a filterable picker), or click it.
+shows **All · Static · Animated** — `[` / `]` everywhere, also `j` / `k` or `↑` / `↓` outside honeycomb (`Ctrl+j` / `Ctrl+k` in a filterable picker), or click it. `h` / `l` move like `←` / `→`.
 
 ## Settings — `~/.config/omarchy/image-picker.json`
 

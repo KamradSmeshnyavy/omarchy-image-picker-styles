@@ -59,40 +59,46 @@ Item {
     "strip":     { expandedWidth: 460,  expandedHeight: 290, sliceWidth: 300, sliceHeight: 190, spacing: 16,   skew: 0,  radius: 12, tilt: 0 },
     "wide":      { expandedWidth: 1040, expandedHeight: 585, sliceWidth: 64,  sliceHeight: 520, spacing: -18,  skew: 34, radius: 0,  tilt: 0 },
     "polaroid":  { expandedWidth: 600,  expandedHeight: 470, sliceWidth: 220, sliceHeight: 300, spacing: 18,   skew: 0,  radius: 4,  tilt: 0 },
-    // honeycomb: центр — шестиугольник 2.2 × маленького, соседи — 2-е и 3-е кольца решётки (sliceWidth × sliceHeight).
-    "honeycomb": { expandedWidth: 286,  expandedHeight: 330, sliceWidth: 130, sliceHeight: 150, spacing: 10,   skew: 0,  radius: 0,  tilt: 0 },
+    // honeycomb: сетка всех обоев шестиугольниками со скруглёнными углами (как у Vitreus): ряды через один со
+    // сдвигом на полшага, выбранная клетка крупнее; slice* — размер клетки, spacing — зазор.
+    "honeycomb": { expandedWidth: 640,  expandedHeight: 0,   sliceWidth: 104, sliceHeight: 120, spacing: 10,   skew: 0,  radius: 0,  tilt: 0 },
     // dots: круглые миниатюры, превью собирается из точек (shaders/dots.frag).
     "dots":      { expandedWidth: 720,  expandedHeight: 450, sliceWidth: 120, sliceHeight: 120, spacing: 18,   skew: 0,  radius: 24, tilt: 0 }
   })
   readonly property bool honeycomb: pickerStyle === "honeycomb"
   readonly property bool dotsStyle: pickerStyle === "dots"
-  // Соты: клетки 2-го и 3-го колец (осевые координаты q, r) по кругу — места соседей по порядку.
-  readonly property var hexCells: {
-    var out = []
-    var dirs = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]]
-    for (var ring = 2; ring <= 3; ring++) {
-      var q = -ring, r = ring          // старт: ring шагов в направлении 4 (-1, +1)
-      var cells = []
-      for (var side = 0; side < 6; side++)
-        for (var step = 0; step < ring; step++) {
-          cells.push([q, r])
-          q += dirs[side][0]; r += dirs[side][1]
-        }
-      cells.sort(function(a, b) {
-        var aa = Math.atan2(0.75 * a[1], a[0] + a[1] / 2), bb = Math.atan2(0.75 * b[1], b[0] + b[1] / 2)
-        return aa - bb
-      })
-      out = out.concat(cells)
-    }
-    return out
+  // Соты: геометрия сетки (в координатах карусели, она в этом стиле почти на весь экран).
+  readonly property real honeyAreaW: card.width
+  readonly property real honeyAreaH: card.height - Style.space(30) - bottomChromeHeight
+  readonly property real honeyStepX: sliceWidth + sliceSpacing
+  readonly property real honeyRowH: sliceHeight * 0.75 + sliceSpacing * 0.866
+  readonly property int honeyCols: Math.max(1, Math.floor((honeyAreaW - sliceWidth / 2) / honeyStepX))
+  readonly property int honeyViewRows: Math.max(1, Math.floor((honeyAreaH - sliceHeight) / honeyRowH) + 1)
+  readonly property int honeyCount: {
+    var n = 0
+    for (var i = 0; i < imageArray.length; i++) if (itemMatches(i)) n++
+    return n
   }
-  // Соседний индекс rel (… -2 -1 [0] 1 2 …) → номер клетки по спирали: 1, -1, 2, -2, …
-  function hexPos(rel) {
-    var k = rel > 0 ? 2 * rel - 1 : -2 * rel
-    var cell = hexCells[k - 1]
-    if (!cell) return null
-    var w = sliceWidth + sliceSpacing, h = (sliceHeight + sliceSpacing) * 0.75
-    return Qt.point(w * (cell[0] + cell[1] / 2), h * cell[1])
+  readonly property int honeyRows: Math.ceil(honeyCount / honeyCols)
+  readonly property int honeyFirstRow: {
+    var sel = Math.floor(selectedFilteredPosition() / honeyCols)
+    return Math.max(0, Math.min(Math.max(0, honeyRows - honeyViewRows), sel - Math.floor(honeyViewRows / 2)))
+  }
+  function honeyCell(pos) {
+    var row = Math.floor(pos / honeyCols), col = pos % honeyCols
+    var totalW = honeyCols * honeyStepX + honeyStepX / 2 - sliceSpacing
+    var rows = Math.min(honeyViewRows, honeyRows)
+    var totalH = (rows - 1) * honeyRowH + sliceHeight
+    var x0 = (honeyAreaW - totalW) / 2, y0 = Math.max(0, (honeyAreaH - totalH) / 2)
+    return { row: row, x: x0 + col * honeyStepX + (row % 2 ? honeyStepX / 2 : 0), y: y0 + (row - honeyFirstRow) * honeyRowH,
+             inView: row >= honeyFirstRow && row < honeyFirstRow + honeyViewRows }
+  }
+  // Ряд вверх / вниз: та же колонка в соседнем ряду (позиция ± число колонок среди отфильтрованных).
+  function honeyStepRow(dir) {
+    var target = selectedFilteredPosition() + dir * honeyCols
+    if (target < 0 || target >= honeyCount) return
+    for (var i = 0; i < imageArray.length; i++)
+      if (itemMatches(i) && filteredPosition(i) === target) { select(i); return }
   }
   readonly property string pickerStyle: stylePresets[pickerConfig.style] ? String(pickerConfig.style) : "slices"
   function pickerNum(key, fallback) {
@@ -488,8 +494,9 @@ Item {
     Item {
       id: card
       visible: root.opened && root.imagesLoaded && root.layoutSettled && root.imageArray.length > 0
-      width: Math.min(parent.width - 80, root.expandedWidth + 13 * (root.sliceWidth + root.sliceSpacing) + 40)
-      height: root.expandedHeight + Style.space(30) + root.bottomChromeHeight
+      // honeycomb — почти весь экран: сетка сот.
+      width: root.honeycomb ? parent.width - 120 : Math.min(parent.width - 80, root.expandedWidth + 13 * (root.sliceWidth + root.sliceSpacing) + 40)
+      height: root.honeycomb ? parent.height - 140 : root.expandedHeight + Style.space(30) + root.bottomChromeHeight
       anchors.centerIn: parent
 
         MouseArea { anchors.fill: parent; onClicked: {} }
@@ -501,7 +508,7 @@ Item {
           anchors.bottom: parent.bottom
           anchors.bottomMargin: root.bottomChromeHeight
           anchors.horizontalCenter: parent.horizontalCenter
-          width: root.expandedWidth + 13 * (root.sliceWidth + root.sliceSpacing)
+          width: root.honeycomb ? card.width : root.expandedWidth + 13 * (root.sliceWidth + root.sliceSpacing)
           clip: false
           focus: true
 
@@ -520,9 +527,20 @@ Item {
             } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
               root.applySelected()
               event.accepted = true
-            } else if (root.hasLive && (event.key === Qt.Key_Up || event.key === Qt.Key_Down
+            } else if (root.honeycomb && (event.key === Qt.Key_Up || event.key === Qt.Key_Down
                 || ((event.key === Qt.Key_J || event.key === Qt.Key_K) && (!root.filterable || event.modifiers & Qt.ControlModifier)))) {
-              root.stepLiveMode(event.key === Qt.Key_Down || event.key === Qt.Key_J ? 1 : -1)
+              // Соты: j / k и ↑ / ↓ — ряд вниз / вверх.
+              root.honeyStepRow(event.key === Qt.Key_Down || event.key === Qt.Key_J ? 1 : -1)
+              event.accepted = true
+            } else if (root.hasLive && (event.key === Qt.Key_BracketLeft || event.key === Qt.Key_BracketRight
+                || (!root.honeycomb && (event.key === Qt.Key_Up || event.key === Qt.Key_Down
+                || ((event.key === Qt.Key_J || event.key === Qt.Key_K) && (!root.filterable || event.modifiers & Qt.ControlModifier)))))) {
+              // Все / статичные / живые: [ ] везде, j / k и ↑ / ↓ — кроме сот (там это ряды).
+              root.stepLiveMode(event.key === Qt.Key_Down || event.key === Qt.Key_J || event.key === Qt.Key_BracketRight ? 1 : -1)
+              event.accepted = true
+            } else if ((event.key === Qt.Key_H || event.key === Qt.Key_L) && (!root.filterable || event.modifiers & Qt.ControlModifier)) {
+              // h / l — как ← / →.
+              root.selectAdjacent(event.key === Qt.Key_H ? -1 : 1)
               event.accepted = true
             } else if (root.filterable && Util.editsFilter(event, root.filterText)) {
               root.updateFilter(Util.editedFilter(event, root.filterText))
@@ -560,14 +578,17 @@ Item {
               property bool sourceActivated: nearby
               onNearbyChanged: if (nearby) sourceActivated = true
 
-              readonly property var hex: root.honeycomb && !selected ? root.hexPos(relativeIndex) : null
-              visible: nearby && (!root.honeycomb || selected || hex !== null)
-              x: root.honeycomb ? (selected ? carousel.previewX : carousel.previewX + root.expandedWidth / 2 + (hex ? hex.x : 0) - root.sliceWidth / 2)
+              readonly property var cell: root.honeycomb && matched ? root.honeyCell(root.filteredPosition(index)) : null
+              visible: root.honeycomb ? (cell !== null && cell.inView) : nearby
+              onVisibleChanged: if (visible) sourceActivated = true
+              x: root.honeycomb ? (cell ? cell.x : 0)
                 : selected ? carousel.previewX : (relativeIndex < 0 ? carousel.previewX + relativeIndex * carousel.itemStep : carousel.previewX + root.expandedWidth + root.sliceSpacing + (relativeIndex - 1) * carousel.itemStep)
-              width: selected ? root.expandedWidth : root.sliceWidth
-              height: selected ? root.expandedHeight : root.sliceHeight
-              y: root.honeycomb ? (selected ? 0 : root.expandedHeight / 2 + (hex ? hex.y : 0) - root.sliceHeight / 2)
+              width: selected && !root.honeycomb ? root.expandedWidth : root.sliceWidth
+              height: selected && !root.honeycomb ? root.expandedHeight : root.sliceHeight
+              y: root.honeycomb ? (cell ? cell.y : 0)
                 : selected ? 0 : (root.expandedHeight - root.sliceHeight) / 2
+              scale: root.honeycomb && selected ? 1.18 : 1
+              Behavior on scale { enabled: root.animMs > 0; NumberAnimation { duration: root.animMs; easing.type: Easing.OutCubic } }
               z: selected ? 100 : 50 - Math.min(Math.abs(relativeIndex), 40)
 
               // picker: плавное перелистывание и поворот соседей (coverflow).
@@ -589,8 +610,19 @@ Item {
               // dots: миниатюры — круги, превью — скруглённое.
               readonly property real itemRadius: root.dotsStyle && !selected ? Math.min(width, height) / 2 : root.cornerRadius
               // Вершины шестиугольника (острый верх) — для маски и рамки сот.
-              readonly property var hexPoints: [Qt.point(width / 2, 0), Qt.point(width, height / 4), Qt.point(width, height * 3 / 4),
-                Qt.point(width / 2, height), Qt.point(0, height * 3 / 4), Qt.point(0, height / 4), Qt.point(width / 2, 0)]
+              // Шестиугольник (острый верх) со скруглёнными вершинами: вдоль ребра до 18 % от вершины, через вершину — кривая.
+              readonly property string hexSvg: {
+                var w = width, h = height
+                var p = [[w / 2, 0], [w, h / 4], [w, h * 3 / 4], [w / 2, h], [0, h * 3 / 4], [0, h / 4]]
+                var k = 0.18, out = ""
+                for (var i = 0; i < 6; i++) {
+                  var c = p[i], a = p[(i + 5) % 6], b = p[(i + 1) % 6]
+                  var s0 = [c[0] + (a[0] - c[0]) * k, c[1] + (a[1] - c[1]) * k]
+                  var s1 = [c[0] + (b[0] - c[0]) * k, c[1] + (b[1] - c[1]) * k]
+                  out += (i === 0 ? "M " : "L ") + s0[0] + " " + s0[1] + " Q " + c[0] + " " + c[1] + " " + s1[0] + " " + s1[1] + " "
+                }
+                return out + "Z"
+              }
               // dots: сборка превью из точек при каждом выборе.
               property real dotProgress: 1
               onSelectedChanged: if (selected && root.dotsStyle) { dotAnim.restart() }
@@ -620,7 +652,7 @@ Item {
                   anchors.fill: parent
                   antialiasing: true
                   preferredRendererType: Shape.CurveRenderer
-                  ShapePath { fillColor: "white"; strokeColor: "transparent"; PathPolyline { path: item.hexPoints } }
+                  ShapePath { fillColor: "white"; strokeColor: "transparent"; PathSvg { path: item.hexSvg } }
                 }
 
                 Shape {
@@ -730,7 +762,7 @@ Item {
                   fillColor: "transparent"
                   strokeColor: item.selected ? root.selectedBorder : root.unselectedBorder
                   strokeWidth: item.selected ? root.selectedBorderWidth : 1
-                  PathPolyline { path: item.hexPoints }
+                  PathSvg { path: item.hexSvg }
                 }
               }
 
@@ -799,7 +831,7 @@ Item {
               Text {
                 id: chipText
                 anchors.centerIn: parent
-                text: ({ all: "All · j/k", static: "Static", live: "▶ Animated" })[parent.modelData]
+                text: ({ all: root.honeycomb ? "All · [ ]" : "All · j/k", static: "Static", live: "▶ Animated" })[parent.modelData]
                 color: parent.on ? root.dimColor : root.foreground
                 font.pixelSize: Style.font.body
               }
