@@ -205,6 +205,11 @@ Item {
     selectedIndex = index
   }
 
+  // picker: клавиша по физическому месту (xkb-код = evdev + 8), а не по символу — h j k l [ ] работают на любой
+  // раскладке (в русской на месте h стоит «р»). Символ тоже проверяется: на случай другой физической раскладки.
+  readonly property var keyCodes: ({ h: 43, j: 44, k: 45, l: 46, "[": 34, "]": 35 })
+  readonly property var keySyms: ({ h: Qt.Key_H, j: Qt.Key_J, k: Qt.Key_K, l: Qt.Key_L, "[": Qt.Key_BracketLeft, "]": Qt.Key_BracketRight })
+  function keyIs(event, name) { return event.key === keySyms[name] || event.nativeScanCode === keyCodes[name] }
   function selectAdjacent(direction) {
     var count = imageArray.length
     if (count === 0) return
@@ -528,19 +533,19 @@ Item {
               root.applySelected()
               event.accepted = true
             } else if (root.honeycomb && (event.key === Qt.Key_Up || event.key === Qt.Key_Down
-                || ((event.key === Qt.Key_J || event.key === Qt.Key_K) && (!root.filterable || event.modifiers & Qt.ControlModifier)))) {
+                || ((root.keyIs(event, "j") || root.keyIs(event, "k")) && (!root.filterable || event.modifiers & Qt.ControlModifier)))) {
               // Соты: j / k и ↑ / ↓ — ряд вниз / вверх.
-              root.honeyStepRow(event.key === Qt.Key_Down || event.key === Qt.Key_J ? 1 : -1)
+              root.honeyStepRow(event.key === Qt.Key_Down || root.keyIs(event, "j") ? 1 : -1)
               event.accepted = true
-            } else if (root.hasLive && (event.key === Qt.Key_BracketLeft || event.key === Qt.Key_BracketRight
+            } else if (root.hasLive && (root.keyIs(event, "[") || root.keyIs(event, "]")
                 || (!root.honeycomb && (event.key === Qt.Key_Up || event.key === Qt.Key_Down
-                || ((event.key === Qt.Key_J || event.key === Qt.Key_K) && (!root.filterable || event.modifiers & Qt.ControlModifier)))))) {
+                || ((root.keyIs(event, "j") || root.keyIs(event, "k")) && (!root.filterable || event.modifiers & Qt.ControlModifier)))))) {
               // Все / статичные / живые: [ ] везде, j / k и ↑ / ↓ — кроме сот (там это ряды).
-              root.stepLiveMode(event.key === Qt.Key_Down || event.key === Qt.Key_J || event.key === Qt.Key_BracketRight ? 1 : -1)
+              root.stepLiveMode(event.key === Qt.Key_Down || root.keyIs(event, "j") || root.keyIs(event, "]") ? 1 : -1)
               event.accepted = true
-            } else if ((event.key === Qt.Key_H || event.key === Qt.Key_L) && (!root.filterable || event.modifiers & Qt.ControlModifier)) {
+            } else if ((root.keyIs(event, "h") || root.keyIs(event, "l")) && (!root.filterable || event.modifiers & Qt.ControlModifier)) {
               // h / l — как ← / →.
-              root.selectAdjacent(event.key === Qt.Key_H ? -1 : 1)
+              root.selectAdjacent(root.keyIs(event, "h") ? -1 : 1)
               event.accepted = true
             } else if (root.filterable && Util.editsFilter(event, root.filterText)) {
               root.updateFilter(Util.editedFilter(event, root.filterText))
