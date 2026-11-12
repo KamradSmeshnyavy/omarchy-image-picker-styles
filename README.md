@@ -10,7 +10,7 @@ unchanged.
 
 <!-- Demo video: repo-videos/omarchy-image-picker-styles.mp4 — drag it here when editing this file on GitHub -->
 
-`slices` (stock), `cards`, `coverflow`, `polaroid`, `strip`, `wide`.
+`slices` (stock), `cards`, `coverflow`, `polaroid`, `strip`, `wide`, `honeycomb` (a big hexagon in the middle, neighbours in rings of hexagons around it — after Vitreus), `dots` (round thumbnails; the preview assembles from dots in a wave, `shaders/dots.frag` — after glyph-rice).
 
 ## Install
 

@@ -50,7 +50,7 @@ Item {
   property color selectedBorder: Commons.Color.imagePicker.selectedBorder
   property color unselectedBorder: Commons.Color.imagePicker.unselectedBorder
   // picker: вид из ~/.config/omarchy/image-picker.json — стиль-пресет и числа поверх него.
-  //   style: slices (сток) | cards | coverflow | strip | wide | polaroid
+  //   style: slices (сток) | cards | coverflow | strip | wide | polaroid | honeycomb (соты, Vitreus) | dots (сборка из точек, glyph-rice)
   property var pickerConfig: ({})
   readonly property var stylePresets: ({
     "slices":    { expandedWidth: 768,  expandedHeight: 475, sliceWidth: 108, sliceHeight: 432, spacing: -30,  skew: 28, radius: 0,  tilt: 0 },
@@ -58,8 +58,42 @@ Item {
     "coverflow": { expandedWidth: 640,  expandedHeight: 420, sliceWidth: 300, sliceHeight: 380, spacing: -210, skew: 0,  radius: 12, tilt: 55 },
     "strip":     { expandedWidth: 460,  expandedHeight: 290, sliceWidth: 300, sliceHeight: 190, spacing: 16,   skew: 0,  radius: 12, tilt: 0 },
     "wide":      { expandedWidth: 1040, expandedHeight: 585, sliceWidth: 64,  sliceHeight: 520, spacing: -18,  skew: 34, radius: 0,  tilt: 0 },
-    "polaroid":  { expandedWidth: 600,  expandedHeight: 470, sliceWidth: 220, sliceHeight: 300, spacing: 18,   skew: 0,  radius: 4,  tilt: 0 }
+    "polaroid":  { expandedWidth: 600,  expandedHeight: 470, sliceWidth: 220, sliceHeight: 300, spacing: 18,   skew: 0,  radius: 4,  tilt: 0 },
+    // honeycomb: центр — шестиугольник 2.2 × маленького, соседи — 2-е и 3-е кольца решётки (sliceWidth × sliceHeight).
+    "honeycomb": { expandedWidth: 286,  expandedHeight: 330, sliceWidth: 130, sliceHeight: 150, spacing: 10,   skew: 0,  radius: 0,  tilt: 0 },
+    // dots: круглые миниатюры, превью собирается из точек (shaders/dots.frag).
+    "dots":      { expandedWidth: 720,  expandedHeight: 450, sliceWidth: 120, sliceHeight: 120, spacing: 18,   skew: 0,  radius: 24, tilt: 0 }
   })
+  readonly property bool honeycomb: pickerStyle === "honeycomb"
+  readonly property bool dotsStyle: pickerStyle === "dots"
+  // Соты: клетки 2-го и 3-го колец (осевые координаты q, r) по кругу — места соседей по порядку.
+  readonly property var hexCells: {
+    var out = []
+    var dirs = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]]
+    for (var ring = 2; ring <= 3; ring++) {
+      var q = -ring, r = ring          // старт: ring шагов в направлении 4 (-1, +1)
+      var cells = []
+      for (var side = 0; side < 6; side++)
+        for (var step = 0; step < ring; step++) {
+          cells.push([q, r])
+          q += dirs[side][0]; r += dirs[side][1]
+        }
+      cells.sort(function(a, b) {
+        var aa = Math.atan2(0.75 * a[1], a[0] + a[1] / 2), bb = Math.atan2(0.75 * b[1], b[0] + b[1] / 2)
+        return aa - bb
+      })
+      out = out.concat(cells)
+    }
+    return out
+  }
+  // Соседний индекс rel (… -2 -1 [0] 1 2 …) → номер клетки по спирали: 1, -1, 2, -2, …
+  function hexPos(rel) {
+    var k = rel > 0 ? 2 * rel - 1 : -2 * rel
+    var cell = hexCells[k - 1]
+    if (!cell) return null
+    var w = sliceWidth + sliceSpacing, h = (sliceHeight + sliceSpacing) * 0.75
+    return Qt.point(w * (cell[0] + cell[1] / 2), h * cell[1])
+  }
   readonly property string pickerStyle: stylePresets[pickerConfig.style] ? String(pickerConfig.style) : "slices"
   function pickerNum(key, fallback) {
     var v = Number(pickerConfig[key])
@@ -526,11 +560,14 @@ Item {
               property bool sourceActivated: nearby
               onNearbyChanged: if (nearby) sourceActivated = true
 
-              visible: nearby
-              x: selected ? carousel.previewX : (relativeIndex < 0 ? carousel.previewX + relativeIndex * carousel.itemStep : carousel.previewX + root.expandedWidth + root.sliceSpacing + (relativeIndex - 1) * carousel.itemStep)
+              readonly property var hex: root.honeycomb && !selected ? root.hexPos(relativeIndex) : null
+              visible: nearby && (!root.honeycomb || selected || hex !== null)
+              x: root.honeycomb ? (selected ? carousel.previewX : carousel.previewX + root.expandedWidth / 2 + (hex ? hex.x : 0) - root.sliceWidth / 2)
+                : selected ? carousel.previewX : (relativeIndex < 0 ? carousel.previewX + relativeIndex * carousel.itemStep : carousel.previewX + root.expandedWidth + root.sliceSpacing + (relativeIndex - 1) * carousel.itemStep)
               width: selected ? root.expandedWidth : root.sliceWidth
               height: selected ? root.expandedHeight : root.sliceHeight
-              y: selected ? 0 : (root.expandedHeight - root.sliceHeight) / 2
+              y: root.honeycomb ? (selected ? 0 : root.expandedHeight / 2 + (hex ? hex.y : 0) - root.sliceHeight / 2)
+                : selected ? 0 : (root.expandedHeight - root.sliceHeight) / 2
               z: selected ? 100 : 50 - Math.min(Math.abs(relativeIndex), 40)
 
               // picker: плавное перелистывание и поворот соседей (coverflow).
@@ -548,7 +585,16 @@ Item {
               // picker: polaroid — белая рамка, картинка внутри, подпись снизу.
               readonly property real framePad: root.polaroid ? 10 : 0
               readonly property real captionHeight: root.polaroid ? 34 : 0
-              readonly property bool rounded: root.skewOffset === 0
+              readonly property bool rounded: root.skewOffset === 0 && !root.honeycomb
+              // dots: миниатюры — круги, превью — скруглённое.
+              readonly property real itemRadius: root.dotsStyle && !selected ? Math.min(width, height) / 2 : root.cornerRadius
+              // Вершины шестиугольника (острый верх) — для маски и рамки сот.
+              readonly property var hexPoints: [Qt.point(width / 2, 0), Qt.point(width, height / 4), Qt.point(width, height * 3 / 4),
+                Qt.point(width / 2, height), Qt.point(0, height * 3 / 4), Qt.point(0, height / 4), Qt.point(width / 2, 0)]
+              // dots: сборка превью из точек при каждом выборе.
+              property real dotProgress: 1
+              onSelectedChanged: if (selected && root.dotsStyle) { dotAnim.restart() }
+              NumberAnimation { id: dotAnim; target: item; property: "dotProgress"; from: 0; to: 1; duration: 1100; easing.type: Easing.InOutQuad }
               readonly property real skAbs: Math.abs(root.skewOffset)
               readonly property real topLeft: root.skewOffset >= 0 ? skAbs : 0
               readonly property real topRight: root.skewOffset >= 0 ? width : width - skAbs
@@ -565,12 +611,20 @@ Item {
                 Rectangle {
                   visible: item.rounded
                   anchors.fill: parent
-                  radius: root.cornerRadius
+                  radius: item.itemRadius
                   color: "white"
                 }
 
                 Shape {
-                  visible: !item.rounded
+                  visible: root.honeycomb
+                  anchors.fill: parent
+                  antialiasing: true
+                  preferredRendererType: Shape.CurveRenderer
+                  ShapePath { fillColor: "white"; strokeColor: "transparent"; PathPolyline { path: item.hexPoints } }
+                }
+
+                Shape {
+                  visible: !item.rounded && !root.honeycomb
                   anchors.fill: parent
                   antialiasing: true
                   preferredRendererType: Shape.CurveRenderer
@@ -628,6 +682,20 @@ Item {
                   smooth: true
                 }
 
+                // picker: dots — превью собирается из точек волной от центра; рисуется только у выбранного во время
+                // сборки. Текстура — сама Image (ShaderEffectSource без окна ронял Quickshell). Не в Loader: внутри
+                // него `item` — свойство Loader, а не эта карточка.
+                ShaderEffect {
+                  visible: root.dotsStyle && item.selected && item.dotProgress < 1 && image.status === Image.Ready
+                  anchors.fill: image
+                  property variant source: image
+                  property real progress: item.dotProgress
+                  property size size: Qt.size(width, height)
+                  property real cell: 9
+                  property color bg: root.dimColor
+                  fragmentShader: Qt.resolvedUrl("shaders/dots.frag.qsb")
+                }
+
                 Rectangle {
                   anchors.fill: parent
                   color: Util.alpha(root.dimColor, item.selected ? 0 : root.dimUnselected)
@@ -647,14 +715,27 @@ Item {
               Rectangle {
                 visible: item.rounded
                 anchors.fill: parent
-                radius: root.cornerRadius
+                radius: item.itemRadius
                 color: "transparent"
                 border.width: item.selected ? root.selectedBorderWidth : 1
                 border.color: item.selected ? root.selectedBorder : root.unselectedBorder
               }
 
               Shape {
-                visible: !item.rounded
+                visible: root.honeycomb
+                anchors.fill: parent
+                antialiasing: true
+                preferredRendererType: Shape.CurveRenderer
+                ShapePath {
+                  fillColor: "transparent"
+                  strokeColor: item.selected ? root.selectedBorder : root.unselectedBorder
+                  strokeWidth: item.selected ? root.selectedBorderWidth : 1
+                  PathPolyline { path: item.hexPoints }
+                }
+              }
+
+              Shape {
+                visible: !item.rounded && !root.honeycomb
                 anchors.fill: parent
                 antialiasing: true
                 preferredRendererType: Shape.CurveRenderer

@@ -9,7 +9,7 @@
 
 <!-- Demo video: repo-videos/omarchy-image-picker-styles.mp4 — drag it here when editing this file on GitHub -->
 
-`slices` (сток), `cards`, `coverflow`, `polaroid`, `strip`, `wide`.
+`slices` (сток), `cards`, `coverflow`, `polaroid`, `strip`, `wide`, `honeycomb` (соты: крупный шестиугольник в центре, соседи кольцами шестиугольников — по мотивам Vitreus), `dots` (круглые миниатюры; превью собирается из точек волной, `shaders/dots.frag` — по мотивам glyph-rice).
 
 ## Установка
 
