@@ -30,6 +30,16 @@ Item {
   property int applySerial: 0
   property string doneFile: ""
   property string filterText: ""
+  // picker: все / статичные / живые (видео и GIF) — j / k или ↑ / ↓; переключатель виден, если живые есть.
+  property string liveMode: "all"
+  readonly property var liveModes: ["all", "static", "live"]
+  readonly property bool hasLive: imageArray.some(function(it) { return ImagePickerModel.isLive(it.filePath) })
+  readonly property string effFilter: (hasLive && liveMode !== "all" ? "\u0001" + liveMode + "\u0001" : "") + filterText
+  function stepLiveMode(dir) {
+    if (!hasLive) return
+    liveMode = liveModes[(liveModes.indexOf(liveMode) + dir + liveModes.length) % liveModes.length]
+    updateFilter(filterText)
+  }
   property var doneFilesToRelease: []
   // Bound to the central [image-picker] section in shell.toml via Commons.Color.qml.
   // `dimColor` tints unselected slices and text outlines on top of the scrim;
@@ -130,19 +140,19 @@ Item {
   }
 
   function itemMatches(index) {
-    return ImagePickerModel.itemMatches(imageArray, index, filterText)
+    return ImagePickerModel.itemMatches(imageArray, index, effFilter)
   }
 
   function firstMatchingIndex() {
-    return ImagePickerModel.firstMatchingIndex(imageArray, filterText)
+    return ImagePickerModel.firstMatchingIndex(imageArray, effFilter)
   }
 
   function filteredPosition(index) {
-    return ImagePickerModel.filteredPosition(imageArray, index, filterText)
+    return ImagePickerModel.filteredPosition(imageArray, index, effFilter)
   }
 
   function selectedFilteredPosition() {
-    return ImagePickerModel.selectedFilteredPosition(imageArray, selectedIndex, filterText)
+    return ImagePickerModel.selectedFilteredPosition(imageArray, selectedIndex, effFilter)
   }
 
   function select(index, immediate) {
@@ -173,7 +183,7 @@ Item {
     filterText = nextFilterText
 
     if (!itemMatches(selectedIndex)) {
-      var first = ImagePickerModel.nextSelectedIndexForFilter(imageArray, selectedIndex, filterText)
+      var first = ImagePickerModel.nextSelectedIndexForFilter(imageArray, selectedIndex, effFilter)
       if (first >= 0) selectedIndex = first
     }
   }
@@ -265,6 +275,7 @@ Item {
     showLabels = nextShowLabels === true || nextShowLabels === "true"
     filterable = nextFilterable === true || nextFilterable === "true"
     filterText = ""
+    liveMode = "all"
     layoutSettled = false
 
     if (imageRows && imageRows === loadedImageRows && imageArray.length > 0) {
@@ -392,6 +403,7 @@ Item {
     showLabels = nextShowLabels === true || nextShowLabels === "true"
     filterable = nextFilterable === true || nextFilterable === "true"
     filterText = ""
+    liveMode = "all"
     layoutSettled = false
 
     if (imageRows && imageRows === loadedImageRows && imageArray.length > 0) {
@@ -473,6 +485,10 @@ Item {
               event.accepted = true
             } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
               root.applySelected()
+              event.accepted = true
+            } else if (root.hasLive && (event.key === Qt.Key_Up || event.key === Qt.Key_Down
+                || ((event.key === Qt.Key_J || event.key === Qt.Key_K) && (!root.filterable || event.modifiers & Qt.ControlModifier)))) {
+              root.stepLiveMode(event.key === Qt.Key_Down || event.key === Qt.Key_J ? 1 : -1)
               event.accepted = true
             } else if (root.filterable && Util.editsFilter(event, root.filterText)) {
               root.updateFilter(Util.editedFilter(event, root.filterText))
@@ -679,6 +695,36 @@ Item {
           font.weight: Font.DemiBold
           horizontalAlignment: Text.AlignHCenter
           elide: Text.ElideRight
+        }
+
+        // picker: переключатель «все / статичные / живые» над каруселью.
+        Row {
+          visible: root.hasLive
+          anchors.bottom: carousel.top
+          anchors.bottomMargin: Style.space(14)
+          anchors.horizontalCenter: carousel.horizontalCenter
+          spacing: Style.space(6)
+          Repeater {
+            model: root.liveModes
+            Rectangle {
+              required property string modelData
+              readonly property bool on: root.liveMode === modelData
+              height: chipText.implicitHeight + Style.space(10)
+              width: chipText.implicitWidth + Style.space(24)
+              radius: height / 2
+              color: on ? root.foreground : Util.alpha(root.dimColor, 0.55)
+              border.width: 1
+              border.color: Util.alpha(root.foreground, on ? 1 : 0.3)
+              Text {
+                id: chipText
+                anchors.centerIn: parent
+                text: ({ all: "All · j/k", static: "Static", live: "▶ Animated" })[parent.modelData]
+                color: parent.on ? root.dimColor : root.foreground
+                font.pixelSize: Style.font.body
+              }
+              MouseArea { anchors.fill: parent; onClicked: { root.liveMode = parent.modelData; root.updateFilter(root.filterText) } }
+            }
+          }
         }
 
         Text {

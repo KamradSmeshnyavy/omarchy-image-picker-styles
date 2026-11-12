@@ -43,6 +43,13 @@ function itemMatches(images, index, filterText) {
   if (!needle) return true
 
   var path = String(images[index].filePath || "")
+  // picker: режим «статичные / живые» (j / k) приходит префиксом \u0001static\u0001 или \u0001live\u0001.
+  var mode = needle.match(/^\u0001(static|live)\u0001/)
+  if (mode) {
+    if ((mode[1] === "live") !== isLive(path)) return false
+    needle = needle.slice(mode[0].length)
+    if (!needle) return true
+  }
   // picker: «live» / «живые» — только живые обои (видео и GIF, их играет owe).
   if (needle === "live" || needle === "живые") return isLive(path)
   return nameForPath(path).toLowerCase().indexOf(needle) !== -1

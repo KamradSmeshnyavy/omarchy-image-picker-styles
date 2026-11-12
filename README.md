@@ -44,7 +44,8 @@ Your settings stay in `~/.config/omarchy/image-picker.json` — delete them by h
 
 Videos (`mp4` `webm` `mkv` `mov` `m4v`) are listed next to images; Omarchy's wallpaper engine
 [owe](https://github.com/omacom/owe) plays them. Their thumbnail is a frame grabbed by `ffmpeg` on first show (same cache
-as images), live wallpapers (video and GIF) carry a ▶ badge, and typing `live` in a filterable picker leaves only them.
+as images), live wallpapers (video and GIF) carry a ▶ badge, and typing `live` in a filterable picker leaves only them. When the list has live wallpapers, a switch above the carousel
+shows **All · Static · Animated** — `j` / `k` or `↑` / `↓` (`Ctrl+j` / `Ctrl+k` in a filterable picker), or click it.
 
 ## Settings — `~/.config/omarchy/image-picker.json`
 
