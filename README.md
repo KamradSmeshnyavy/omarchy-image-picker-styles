@@ -10,7 +10,7 @@ unchanged.
 
 <!-- Demo video: repo-videos/omarchy-image-picker-styles.mp4 — drag it here when editing this file on GitHub -->
 
-`slices` (stock), `cards`, `coverflow`, `polaroid`, `strip`, `wide`, `honeycomb` (all wallpapers as a full-screen grid of rounded hexagons, every other row shifted by half a cell, the selected one bigger; `j` / `k` or `↑` / `↓` — a row down / up — after Vitreus), `dots` (round thumbnails; the preview assembles from dots in a wave, `shaders/dots.frag` — after glyph-rice).
+`slices` (stock), `cards`, `coverflow`, `polaroid`, `strip`, `wide`, `honeycomb` (all wallpapers as a full-screen grid of rounded hexagons, every other row shifted by half a cell, the selected one bigger; `j` / `k` or `↑` / `↓` — a row down / up — after Vitreus), `dots` (round thumbnails; the preview assembles from dots in a wave, `shaders/dots.frag` — after glyph-rice), `glyph` (glyph-rice's own wallpaper switcher, ported: the whole screen is the preview and assembles from dots in a wave from a strip of dotted circles, the selected one inside a ring of LEDs lit by its place in the collection; `Tab` — dots / grey photo / colour, `↑` / `↓` — dot size, `Shift`+`↑` / `↓` — light, `[` / `]` — all / still / live. On apply, the look is written to `~/.config/omarchy/wallpaper-look.json`, and [Wallpaper FX](https://github.com/KamradSmeshnyavy/omarchy-wallpaper-fx) draws the desktop the same way. In the theme switcher it shows colour previews and filters as you type. Needs the Doto and Space Mono fonts).
 
 ## Install
 
@@ -84,5 +84,5 @@ omarchy plugin add https://github.com/KamradSmeshnyavy/omarchy-customizer --enab
 
 ## License
 
-MIT. Based on `omarchy.image-picker` from [Omarchy](https://github.com/basecamp/omarchy) (MIT, © David
-Heinemeier Hansson).
+GPL-3.0 (see [LICENSE](LICENSE); earlier versions were MIT). Credits — in [NOTICE](NOTICE). Based on `omarchy.image-picker` from [Omarchy](https://github.com/basecamp/omarchy) (MIT, © David
+Heinemeier Hansson); the glyph parts come from [glyph-rice](https://github.com/Nebelung-cloud/glyph-rice) (GPL-3.0).

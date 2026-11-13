@@ -7,6 +7,7 @@ import QtQuick.Shapes
 import qs.Commons
 import qs.Commons as Commons
 import "ImagePickerModel.js" as ImagePickerModel
+import "glyph" as Glyph
 
 Item {
   id: root
@@ -50,7 +51,8 @@ Item {
   property color selectedBorder: Commons.Color.imagePicker.selectedBorder
   property color unselectedBorder: Commons.Color.imagePicker.unselectedBorder
   // picker: вид из ~/.config/omarchy/image-picker.json — стиль-пресет и числа поверх него.
-  //   style: slices (сток) | cards | coverflow | strip | wide | polaroid | honeycomb (соты, Vitreus) | dots (сборка из точек, glyph-rice)
+  //   style: slices (сток) | cards | coverflow | strip | wide | polaroid | honeycomb (соты, Vitreus) | dots (сборка из точек)
+  //          | glyph (переключатель обоев glyph-rice: превью на весь экран, лента кругов)
   property var pickerConfig: ({})
   readonly property var stylePresets: ({
     "slices":    { expandedWidth: 768,  expandedHeight: 475, sliceWidth: 108, sliceHeight: 432, spacing: -30,  skew: 28, radius: 0,  tilt: 0 },
@@ -63,10 +65,13 @@ Item {
     // сдвигом на полшага, выбранная клетка крупнее; slice* — размер клетки, spacing — зазор.
     "honeycomb": { expandedWidth: 640,  expandedHeight: 0,   sliceWidth: 104, sliceHeight: 120, spacing: 10,   skew: 0,  radius: 0,  tilt: 0 },
     // dots: круглые миниатюры, превью собирается из точек (shaders/dots.frag).
-    "dots":      { expandedWidth: 720,  expandedHeight: 450, sliceWidth: 120, sliceHeight: 120, spacing: 18,   skew: 0,  radius: 24, tilt: 0 }
+    "dots":      { expandedWidth: 720,  expandedHeight: 450, sliceWidth: 120, sliceHeight: 120, spacing: 18,   skew: 0,  radius: 24, tilt: 0 },
+    // glyph: весь экран — превью, лента кругов внизу (glyph/GlyphWalls.qml, из glyph-rice, GPL-3.0); числа не нужны.
+    "glyph":     { expandedWidth: 720,  expandedHeight: 450, sliceWidth: 120, sliceHeight: 120, spacing: 18,   skew: 0,  radius: 24, tilt: 0 }
   })
   readonly property bool honeycomb: pickerStyle === "honeycomb"
   readonly property bool dotsStyle: pickerStyle === "dots"
+  readonly property bool glyphStyle: pickerStyle === "glyph"
   // Соты: геометрия сетки (в координатах карусели, она в этом стиле почти на весь экран).
   readonly property real honeyAreaW: card.width
   readonly property real honeyAreaH: card.height - Style.space(30) - bottomChromeHeight
@@ -146,8 +151,10 @@ Item {
   }
 
   function focusPicker() {
-    if (root.opened && root.imagesLoaded && root.layoutSettled)
-      carousel.forceActiveFocus()
+    if (root.opened && root.imagesLoaded && root.layoutSettled) {
+      if (root.glyphStyle && glyphView.item) glyphView.item.focusIn()
+      else carousel.forceActiveFocus()
+    }
   }
 
   function revealWhenSettled(serial) {
@@ -485,7 +492,7 @@ Item {
 
     Rectangle {
       anchors.fill: parent
-      visible: root.opened && root.imagesLoaded
+      visible: root.opened && root.imagesLoaded && !root.glyphStyle
       // picker: своя плотность затемнения фона (scrimAlpha), -1 — из темы.
       color: root.scrimAlpha >= 0 ? Util.alpha(root.scrim, root.scrimAlpha) : root.scrim
     }
@@ -498,7 +505,7 @@ Item {
 
     Item {
       id: card
-      visible: root.opened && root.imagesLoaded && root.layoutSettled && root.imageArray.length > 0
+      visible: root.opened && root.imagesLoaded && root.layoutSettled && root.imageArray.length > 0 && !root.glyphStyle
       // honeycomb — почти весь экран: сетка сот.
       width: root.honeycomb ? parent.width - 120 : Math.min(parent.width - 80, root.expandedWidth + 13 * (root.sliceWidth + root.sliceSpacing) + 40)
       height: root.honeycomb ? parent.height - 140 : root.expandedHeight + Style.space(30) + root.bottomChromeHeight
@@ -861,6 +868,15 @@ Item {
           horizontalAlignment: Text.AlignHCenter
           elide: Text.ElideRight
         }
+    }
+
+    // picker: стиль glyph — свой экран целиком; живёт, пока picker открыт (превью — две картинки под экран).
+    Loader {
+      id: glyphView
+      anchors.fill: parent
+      active: root.glyphStyle && root.opened && root.imagesLoaded && root.layoutSettled && root.imageArray.length > 0
+      sourceComponent: Glyph.GlyphWalls { picker: root }
+      onLoaded: root.focusPicker()
     }
   }
 }

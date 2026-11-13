@@ -9,7 +9,7 @@
 
 <!-- Demo video: repo-videos/omarchy-image-picker-styles.mp4 — drag it here when editing this file on GitHub -->
 
-`slices` (сток), `cards`, `coverflow`, `polaroid`, `strip`, `wide`, `honeycomb` (соты: все обои сеткой скруглённых шестиугольников на весь экран, ряды через один со сдвигом на полклетки, выбранная крупнее; `j` / `k` или `↑` / `↓` — ряд вниз / вверх — по мотивам Vitreus), `dots` (круглые миниатюры; превью собирается из точек волной, `shaders/dots.frag` — по мотивам glyph-rice).
+`slices` (сток), `cards`, `coverflow`, `polaroid`, `strip`, `wide`, `honeycomb` (соты: все обои сеткой скруглённых шестиугольников на весь экран, ряды через один со сдвигом на полклетки, выбранная крупнее; `j` / `k` или `↑` / `↓` — ряд вниз / вверх — по мотивам Vitreus), `dots` (круглые миниатюры; превью собирается из точек волной, `shaders/dots.frag` — по мотивам glyph-rice), `glyph` (перенесённый переключатель обоев glyph-rice: весь экран — превью, оно собирается из точек волной от ленты точечных кругов, выбранный — в кольце светодиодов, горящем долей пути по коллекции; `Tab` — точки / серое фото / цвет, `↑` / `↓` — размер точек, `Shift`+`↑` / `↓` — яркость, `[` / `]` — все / статичные / живые. При выборе вид пишется в `~/.config/omarchy/wallpaper-look.json`, и [Wallpaper FX](https://github.com/KamradSmeshnyavy/omarchy-wallpaper-fx) рисует рабочий стол так же. В переключателе тем — цветные превью и фильтр по набору. Нужны шрифты Doto и Space Mono).
 
 ## Установка
 
@@ -83,5 +83,5 @@ omarchy plugin add https://github.com/KamradSmeshnyavy/omarchy-customizer --enab
 
 ## Лицензия
 
-MIT. Основано на `omarchy.image-picker` из [Omarchy](https://github.com/basecamp/omarchy) (MIT, © David
-Heinemeier Hansson).
+GPL-3.0 (см. [LICENSE](LICENSE); прежние версии — MIT). Авторы заимствований — в [NOTICE](NOTICE). Основано на `omarchy.image-picker` из [Omarchy](https://github.com/basecamp/omarchy) (MIT, © David
+Heinemeier Hansson); части glyph — из [glyph-rice](https://github.com/Nebelung-cloud/glyph-rice) (GPL-3.0).

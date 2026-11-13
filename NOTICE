@@ -1,0 +1,20 @@
+Omarchy Image Picker Styles
+Copyright (c) 2026 KamradSmeshnyavy
+
+Licensed under the GNU General Public License v3.0 (see LICENSE). Versions before the glyph style
+(up to commit 54a52be) were released under the MIT License.
+
+This project includes or is based on:
+
+- Omarchy — https://github.com/basecamp/omarchy
+  MIT License, Copyright (c) David Heinemeier Hansson.
+  A clone of the stock omarchy.image-picker plugin (ImagePicker.qml, ImagePickerModel.js, list.sh).
+
+- glyph-rice — https://github.com/Nebelung-cloud/glyph-rice
+  GPL-3.0, Copyright (c) Nebelung-cloud.
+  The glyph style in glyph/: GlyphWalls.qml (from wall/Walls.qml), Wall.qml, Art.qml, Dm.qml, Ring.qml,
+  Lb.qml, Num.qml, Pick.qml, Dial.qml and shaders/wall.frag, shaders/dm.frag. Adapted to the Omarchy
+  picker (its list, filter and selection) and to Omarchy theme colours (GTheme.qml).
+
+- Vitreus — https://github.com/natepayn3/Vitreus
+  MIT License. The honeycomb style follows its hexagon wallpaper grid (own code).
