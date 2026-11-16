@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 import Quickshell.Wayland
 import QtQuick
 import QtQuick.Effects
@@ -48,8 +49,8 @@ Item {
   property color dimColor: Commons.Color.background
   property color foreground: Commons.Color.imagePicker.text
   property color scrim: Commons.Color.imagePicker.scrim
-  property color selectedBorder: Commons.Color.imagePicker.selectedBorder
-  property color unselectedBorder: Commons.Color.imagePicker.unselectedBorder
+  property color selectedBorder: nierStyle ? "#463f2e" : Commons.Color.imagePicker.selectedBorder
+  property color unselectedBorder: nierStyle ? Qt.rgba(70 / 255, 63 / 255, 46 / 255, 0.5) : Commons.Color.imagePicker.unselectedBorder
   // picker: вид из ~/.config/omarchy/image-picker.json — стиль-пресет и числа поверх него.
   //   style: slices (сток) | cards | coverflow | strip | wide | polaroid | honeycomb (соты, Vitreus) | dots (сборка из точек)
   //          | glyph (переключатель обоев glyph-rice: превью на весь экран, лента кругов)
@@ -67,8 +68,13 @@ Item {
     // dots: круглые миниатюры, превью собирается из точек (shaders/dots.frag).
     "dots":      { expandedWidth: 720,  expandedHeight: 450, sliceWidth: 120, sliceHeight: 120, spacing: 18,   skew: 0,  radius: 24, tilt: 0 },
     // glyph: весь экран — превью, лента кругов внизу (glyph/GlyphWalls.qml, из glyph-rice, GPL-3.0); числа не нужны.
-    "glyph":     { expandedWidth: 720,  expandedHeight: 450, sliceWidth: 120, sliceHeight: 120, spacing: 18,   skew: 0,  radius: 24, tilt: 0 }
+    "glyph":     { expandedWidth: 720,  expandedHeight: 450, sliceWidth: 120, sliceHeight: 120, spacing: 18,   skew: 0,  radius: 24, tilt: 0 },
+    // nier: по мотивам WallpaperPicker из Unit-3 (samyns, MIT): бежевый экран NieR с сеткой и служебными строками по
+    // углам, квадратные миниатюры в рамке чернилами, подпись выбранной — Share Tech Mono.
+    "nier":      { expandedWidth: 640,  expandedHeight: 400, sliceWidth: 200, sliceHeight: 300, spacing: 14,   skew: 0,  radius: 0,  tilt: 0 }
   })
+  readonly property bool nierStyle: pickerStyle === "nier"
+  readonly property string nierFont: Qt.fontFamilies().indexOf("Share Tech Mono") !== -1 ? "Share Tech Mono" : "monospace"
   readonly property bool honeycomb: pickerStyle === "honeycomb"
   readonly property bool dotsStyle: pickerStyle === "dots"
   readonly property bool glyphStyle: pickerStyle === "glyph"
@@ -494,7 +500,35 @@ Item {
       anchors.fill: parent
       visible: root.opened && root.imagesLoaded && !root.glyphStyle
       // picker: своя плотность затемнения фона (scrimAlpha), -1 — из темы.
-      color: root.scrimAlpha >= 0 ? Util.alpha(root.scrim, root.scrimAlpha) : root.scrim
+      color: root.nierStyle ? Qt.rgba(214 / 255, 207 / 255, 181 / 255, 0.9) : root.scrimAlpha >= 0 ? Util.alpha(root.scrim, root.scrimAlpha) : root.scrim
+    }
+
+    // nier: сетка и служебные строки по углам (как у WallpaperPicker Unit-3)
+    Item {
+      anchors.fill: parent
+      visible: root.nierStyle && root.opened && root.imagesLoaded
+      Repeater { model: Math.ceil(parent.width / 40); Rectangle { x: index * 40; width: 1; height: parent.height; color: Qt.rgba(70 / 255, 63 / 255, 46 / 255, 0.07) } }
+      Repeater { model: Math.ceil(parent.height / 40); Rectangle { y: index * 40; width: parent.width; height: 1; color: Qt.rgba(70 / 255, 63 / 255, 46 / 255, 0.07) } }
+      Column {
+        x: 30; y: 28; spacing: 2
+        Row {
+          spacing: 5
+          Rectangle { width: 5; height: 5; radius: 3; color: "#6e2a2a"; anchors.verticalCenter: parent.verticalCenter }
+          Text { text: "WALLPAPER SELECT"; font.family: root.nierFont; font.pixelSize: 9; font.letterSpacing: 2; color: "#463f2e" }
+        }
+        Text { text: "NODE · " + (Hyprland.focusedMonitor ? Hyprland.focusedMonitor.name : ""); font.family: root.nierFont; font.pixelSize: 9; font.letterSpacing: 2; color: "#463f2e" }
+        Text { text: "壁紙選択"; font.pixelSize: 8; color: "#463f2e"; opacity: 0.7 }
+      }
+      Text {
+        anchors { right: parent.right; rightMargin: 30; top: parent.top; topMargin: 28 }
+        text: (root.imageArray.length ? root.selectedFilteredPosition() + 1 : 0) + " / " + root.imageArray.length + " NODES"
+        font.family: root.nierFont; font.pixelSize: 9; font.letterSpacing: 2; color: "#463f2e"
+      }
+      Text {
+        anchors { left: parent.left; leftMargin: 30; bottom: parent.bottom; bottomMargin: 28 }
+        text: "←→ / SCROLL  NAVIGATE  ·  ⏎  APPLY  ·  ESC  QUIT"
+        font.family: root.nierFont; font.pixelSize: 9; font.letterSpacing: 2; color: "#463f2e"
+      }
     }
 
     MouseArea {
@@ -813,11 +847,13 @@ Item {
           anchors.horizontalCenter: carousel.horizontalCenter
           width: root.expandedWidth
           text: root.currentLabel()
-          color: root.foreground
-          style: Text.Outline
+          color: root.nierStyle ? "#463f2e" : root.foreground
+          style: root.nierStyle ? Text.Normal : Text.Outline
           styleColor: Util.alpha(root.dimColor, 0.7)
-          font.pixelSize: Style.font.display
-          font.weight: Font.DemiBold
+          font.pixelSize: root.nierStyle ? 13 : Style.font.display
+          font.weight: root.nierStyle ? Font.Normal : Font.DemiBold
+          font.family: root.nierStyle ? root.nierFont : Style.font.family
+          font.letterSpacing: root.nierStyle ? 3 : 0
           horizontalAlignment: Text.AlignHCenter
           elide: Text.ElideRight
         }

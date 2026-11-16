@@ -12,6 +12,8 @@ unchanged.
 
 `slices` (stock), `cards`, `coverflow`, `polaroid`, `strip`, `wide`, `honeycomb` (all wallpapers as a full-screen grid of rounded hexagons, every other row shifted by half a cell, the selected one bigger; `j` / `k` or `↑` / `↓` — a row down / up — after Vitreus), `dots` (round thumbnails; the preview assembles from dots in a wave, `shaders/dots.frag` — after glyph-rice), `glyph` (glyph-rice's own wallpaper switcher, ported: the whole screen is the preview and assembles from dots in a wave from a strip of dotted circles, the selected one inside a ring of LEDs lit by its place in the collection; `Tab` — dots / grey photo / colour, `↑` / `↓` — dot size, `Shift`+`↑` / `↓` — light, `[` / `]` — all / still / live. On apply, the look is written to `~/.config/omarchy/wallpaper-look.json`, and [Wallpaper FX](https://github.com/KamradSmeshnyavy/omarchy-wallpaper-fx) draws the desktop the same way. In the theme switcher it shows colour previews and filters as you type. Needs the Doto and Space Mono fonts).
 
+`nier` — after the wallpaper picker of [Unit-3](https://github.com/samyns/Unit-3) (MIT): a beige NieR screen with a grid and service lines in the corners (WALLPAPER SELECT, the monitor, n / m NODES, the keys), square thumbnails in ink frames.
+
 ## Install
 
 ```sh
