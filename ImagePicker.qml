@@ -285,7 +285,9 @@ Item {
     selectionFile = ""
     doneFile = ""
 
-    applyProc.command = ["bash", "-c", "printf '%s\\n' " + Util.shellQuote(path) + " > " + Util.shellQuote(activeSelectionFile) + "; : > " + Util.shellQuote(activeDoneFile)]
+    // crt: обои ставятся уже через фильтр трубки (его wallpaper.sh --apply) — путь подменяется готовой картинкой
+    var pick = crtFilters(path) ? "p=$(omarchy-crt-filter " + Util.shellQuote(path) + " 2>/dev/null) || p=" + Util.shellQuote(path) + "; " : "p=" + Util.shellQuote(path) + "; "
+    applyProc.command = ["bash", "-c", pick + "printf '%s\\n' \"$p\" > " + Util.shellQuote(activeSelectionFile) + "; : > " + Util.shellQuote(activeDoneFile)]
     applyProc.running = true
   }
 
@@ -337,6 +339,7 @@ Item {
 
     imageDirs = nextImageDirs
     imageRows = nextImageRows
+    if (crtStyle) crtProbe.running = true
     selectedImage = nextSelectedImage
     selectionFile = nextSelectionFile
     doneFile = nextDoneFile
@@ -483,6 +486,40 @@ Item {
     }
   }
 
+  // ── crt: фильтр трубки в выборе обоев (его Retro/wallpaper/Picker.qml — «превью прогоняет фильтр») ──
+  // Фильтр включён у профиля темы (tube.json → filter.on) или своим (crt.json → filter.on). Выбранная картинка
+  // фильтруется в фоне (omarchy-crt-filter, кэш) и показывается в карточке такой, какой встанет; при выборе обоями
+  // ставится отфильтрованная. Уже готовые обои тем crt-* и кэш фильтра не фильтруются второй раз; темы — никогда.
+  property bool crtFilterOn: false
+  Process {
+    id: crtProbe
+    command: ["bash", "-c", "a=$(jq -r '.filter.on // false' ~/.local/state/omarchy/current/theme/tube.json 2>/dev/null); " +
+      "b=$(jq -r '.filter.on // empty' ~/.config/omarchy/crt.json 2>/dev/null); echo ${b:-${a:-false}}"]
+    stdout: StdioCollector { onStreamFinished: root.crtFilterOn = text.trim() === "true" }
+  }
+  function crtFilters(path) {
+    return crtStyle && crtFilterOn && imageRows === "" && !!path && path.indexOf("/themes/crt-") === -1
+      && path.indexOf("/crt-wall/") === -1 && /\.(png|jpe?g|webp)$/i.test(path)
+  }
+  property string crtFor: ""
+  property string crtOut: ""
+  Timer { id: crtLater; interval: 300; onTriggered: root.crtRun() }
+  function crtRun() {
+    var p = currentPath()
+    if (!crtFilters(p) || p === crtFor || crtProc.running) return
+    crtProc.src = p
+    crtProc.command = ["omarchy-crt-filter", p]
+    crtProc.running = true
+  }
+  Process {
+    id: crtProc
+    property string src: ""
+    stdout: StdioCollector { onStreamFinished: { var o = text.trim(); if (o) { root.crtFor = crtProc.src; root.crtOut = o } } }
+    onExited: if (root.currentPath() !== root.crtFor) crtLater.restart()
+  }
+  onSelectedIndexChanged: if (crtStyle && crtFilterOn) crtLater.restart()
+  onCrtFilterOnChanged: if (crtFilterOn) crtLater.restart()
+
   Process {
     id: applyProc
     onExited: {
@@ -511,7 +548,8 @@ Item {
       anchors.fill: parent
       visible: root.opened && root.imagesLoaded && !root.glyphStyle
       // picker: своя плотность затемнения фона (scrimAlpha), -1 — из темы.
-      color: root.nierStyle ? Qt.rgba(214 / 255, 207 / 255, 181 / 255, 0.9) : root.scrimAlpha >= 0 ? Util.alpha(root.scrim, root.scrimAlpha)
+      color: root.nierStyle ? Qt.rgba(214 / 255, 207 / 255, 181 / 255, 0.9) : root.crtStyle ? Util.alpha(Commons.Color.background, 0.95)
+        : root.scrimAlpha >= 0 ? Util.alpha(root.scrim, root.scrimAlpha)
         : root.spaceStyle ? Util.alpha(Commons.Color.background, 0.82) : root.crtStyle ? Util.alpha(Commons.Color.background, 0.95) : root.scrim
     }
 
@@ -833,7 +871,8 @@ Item {
                   // Load only the initial/visited nearby images, but keep the
                   // source once activated so Qt does not tear textures down as
                   // selection moves through the carousel.
-                  source: item.sourceActivated && item.thumbnailPath ? Util.fileUrl(item.thumbnailPath) : ""
+                  source: item.selected && root.crtFor !== "" && root.crtFor === item.filePath ? Util.fileUrl(root.crtOut)
+                    : item.sourceActivated && item.thumbnailPath ? Util.fileUrl(item.thumbnailPath) : ""
                   fillMode: Image.PreserveAspectCrop
                   asynchronous: false
                   cache: true
