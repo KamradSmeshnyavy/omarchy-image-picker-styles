@@ -14,6 +14,8 @@ unchanged.
 
 `nier` — after the wallpaper picker of [Unit-3](https://github.com/samyns/Unit-3) (MIT): a beige NieR screen with a grid and service lines in the corners (WALLPAPER SELECT, the monitor, n / m NODES, the keys), square thumbnails in ink frames.
 
+`space` — the HUD of the Space rice (after the Space style of [elifouts/Dotfiles](https://github.com/elifouts/Dotfiles), GPL-3.0): square cards over a dark veil in the theme background, the selected one framed in the accent with corner brackets, service lines in uppercase in the corners (WORLD SELECT, the monitor, n / m WORLDS, the keys).
+
 ## Install
 
 ```sh

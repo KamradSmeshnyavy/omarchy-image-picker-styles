@@ -13,6 +13,8 @@
 
 `nier` — по мотивам выбора обоев [Unit-3](https://github.com/samyns/Unit-3) (MIT): бежевый экран NieR с сеткой и служебными строками по углам (WALLPAPER SELECT, монитор, n / m NODES, клавиши), квадратные миниатюры в рамке чернилами.
 
+`space` — HUD райса Space (по мотивам стиля Space из [elifouts/Dotfiles](https://github.com/elifouts/Dotfiles), GPL-3.0): квадратные карточки на тёмной вуали цвета фона, выбранная — в рамке акцентом с уголками, служебные строки капсом по углам (WORLD SELECT, монитор, n / m WORLDS, клавиши).
+
 ## Установка
 
 ```sh
