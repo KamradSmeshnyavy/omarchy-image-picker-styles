@@ -49,11 +49,11 @@ Item {
   property color dimColor: Commons.Color.background
   property color foreground: Commons.Color.imagePicker.text
   property color scrim: Commons.Color.imagePicker.scrim
-  property color selectedBorder: nierStyle ? "#463f2e" : Commons.Color.imagePicker.selectedBorder
-  property color unselectedBorder: nierStyle ? Qt.rgba(70 / 255, 63 / 255, 46 / 255, 0.5) : Commons.Color.imagePicker.unselectedBorder
+  property color selectedBorder: nierStyle ? "#463f2e" : spaceStyle ? Commons.Color.accent : Commons.Color.imagePicker.selectedBorder
+  property color unselectedBorder: nierStyle ? Qt.rgba(70 / 255, 63 / 255, 46 / 255, 0.5) : spaceStyle ? Util.alpha(Commons.Color.accent, 0.25) : Commons.Color.imagePicker.unselectedBorder
   // picker: вид из ~/.config/omarchy/image-picker.json — стиль-пресет и числа поверх него.
   //   style: slices (сток) | cards | coverflow | strip | wide | polaroid | honeycomb (соты, Vitreus) | dots (сборка из точек)
-  //          | glyph (переключатель обоев glyph-rice: превью на весь экран, лента кругов)
+  //          | glyph (переключатель обоев glyph-rice: превью на весь экран, лента кругов) | nier | space (HUD райса Space)
   property var pickerConfig: ({})
   readonly property var stylePresets: ({
     "slices":    { expandedWidth: 768,  expandedHeight: 475, sliceWidth: 108, sliceHeight: 432, spacing: -30,  skew: 28, radius: 0,  tilt: 0 },
@@ -71,8 +71,13 @@ Item {
     "glyph":     { expandedWidth: 720,  expandedHeight: 450, sliceWidth: 120, sliceHeight: 120, spacing: 18,   skew: 0,  radius: 24, tilt: 0 },
     // nier: по мотивам WallpaperPicker из Unit-3 (samyns, MIT): бежевый экран NieR с сеткой и служебными строками по
     // углам, квадратные миниатюры в рамке чернилами, подпись выбранной — Share Tech Mono.
-    "nier":      { expandedWidth: 640,  expandedHeight: 400, sliceWidth: 200, sliceHeight: 300, spacing: 14,   skew: 0,  radius: 0,  tilt: 0 }
+    "nier":      { expandedWidth: 640,  expandedHeight: 400, sliceWidth: 200, sliceHeight: 300, spacing: 14,   skew: 0,  radius: 0,  tilt: 0 },
+    // space: HUD райса Space (облик стиля Space из elifouts/Dotfiles, GPL-3.0): прямые углы, рамка выбранной акцентом и
+    // уголки вокруг неё, тёмная вуаль цвета фона, служебные строки капсом вразрядку по углам, подпись — JetBrains Mono.
+    "space":     { expandedWidth: 720,  expandedHeight: 405, sliceWidth: 132, sliceHeight: 360, spacing: 12,   skew: 0,  radius: 0,  tilt: 0 }
   })
+  readonly property bool spaceStyle: pickerStyle === "space"
+  readonly property string spaceFont: Qt.fontFamilies().indexOf("JetBrainsMono Nerd Font") !== -1 ? "JetBrainsMono Nerd Font" : "monospace"
   readonly property bool nierStyle: pickerStyle === "nier"
   readonly property string nierFont: Qt.fontFamilies().indexOf("Share Tech Mono") !== -1 ? "Share Tech Mono" : "monospace"
   readonly property bool honeycomb: pickerStyle === "honeycomb"
@@ -126,7 +131,7 @@ Item {
   readonly property real cornerRadius: pickerNum("cardRadius", preset.radius)
   readonly property real tilt: pickerNum("tilt", preset.tilt)
   readonly property real dimUnselected: pickerNum("dim", 0.42)
-  readonly property int selectedBorderWidth: pickerNum("selectedBorder", 3)
+  readonly property int selectedBorderWidth: pickerNum("selectedBorder", spaceStyle ? 1 : 3)
   readonly property int animMs: pickerNum("animMs", 160)
   readonly property real scrimAlpha: pickerNum("scrimAlpha", -1)
   readonly property bool polaroid: pickerStyle === "polaroid"
@@ -500,7 +505,44 @@ Item {
       anchors.fill: parent
       visible: root.opened && root.imagesLoaded && !root.glyphStyle
       // picker: своя плотность затемнения фона (scrimAlpha), -1 — из темы.
-      color: root.nierStyle ? Qt.rgba(214 / 255, 207 / 255, 181 / 255, 0.9) : root.scrimAlpha >= 0 ? Util.alpha(root.scrim, root.scrimAlpha) : root.scrim
+      color: root.nierStyle ? Qt.rgba(214 / 255, 207 / 255, 181 / 255, 0.9) : root.scrimAlpha >= 0 ? Util.alpha(root.scrim, root.scrimAlpha)
+        : root.spaceStyle ? Util.alpha(Commons.Color.background, 0.82) : root.scrim
+    }
+
+    // space: служебные строки HUD по углам и уголки экрана
+    Item {
+      anchors.fill: parent
+      visible: root.spaceStyle && root.opened && root.imagesLoaded
+      Repeater {
+        model: 4
+        Item {
+          required property int index
+          x: index % 2 ? parent.width - 40 : 24
+          y: index > 1 ? parent.height - 40 : 24
+          width: 16; height: 16
+          Rectangle { width: 16; height: 1; y: parent.index > 1 ? 15 : 0; color: Commons.Color.accent }
+          Rectangle { width: 1; height: 16; x: parent.index % 2 ? 15 : 0; color: Commons.Color.accent }
+        }
+      }
+      Column {
+        x: 52; y: 46; spacing: 4
+        Row {
+          spacing: 8
+          Rectangle { width: 6; height: 6; rotation: 45; color: Commons.Color.accent; anchors.verticalCenter: parent.verticalCenter }
+          Text { text: "WORLD SELECT"; font.family: root.spaceFont; font.pixelSize: 11; font.letterSpacing: 2; color: Commons.Color.foreground }
+        }
+        Text { text: "SECTOR // " + (Hyprland.focusedMonitor ? String(Hyprland.focusedMonitor.name).toUpperCase() : ""); font.family: root.spaceFont; font.pixelSize: 10; font.letterSpacing: 1.6; color: Util.alpha(Commons.Color.foreground, 0.5) }
+      }
+      Text {
+        anchors { right: parent.right; rightMargin: 52; top: parent.top; topMargin: 46 }
+        text: (root.imageArray.length ? root.selectedFilteredPosition() + 1 : 0) + " / " + root.imageArray.length + "  WORLDS"
+        font.family: root.spaceFont; font.pixelSize: 11; font.letterSpacing: 2; color: Commons.Color.accent
+      }
+      Text {
+        anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 46 }
+        text: "←→  SCAN    ⏎  LAND    ESC  ABORT"
+        font.family: root.spaceFont; font.pixelSize: 10; font.letterSpacing: 2; color: Util.alpha(Commons.Color.foreground, 0.45)
+      }
     }
 
     // nier: сетка и служебные строки по углам (как у WallpaperPicker Unit-3)
@@ -789,6 +831,19 @@ Item {
                 }
               }
 
+              // space: уголки 9 px акцентом вокруг выбранной
+              Repeater {
+                model: root.spaceStyle && item.selected ? 4 : 0
+                Item {
+                  required property int index
+                  x: index % 2 ? item.width + 1 : -10
+                  y: index > 1 ? item.height + 1 : -10
+                  width: 9; height: 9
+                  Rectangle { width: 9; height: 1; y: parent.index > 1 ? 8 : 0; color: Commons.Color.accent }
+                  Rectangle { width: 1; height: 9; x: parent.index % 2 ? 8 : 0; color: Commons.Color.accent }
+                }
+              }
+
               // picker: рамка без скоса — скруглённая.
               Rectangle {
                 visible: item.rounded
@@ -847,13 +902,14 @@ Item {
           anchors.horizontalCenter: carousel.horizontalCenter
           width: root.expandedWidth
           text: root.currentLabel()
-          color: root.nierStyle ? "#463f2e" : root.foreground
-          style: root.nierStyle ? Text.Normal : Text.Outline
+          color: root.nierStyle ? "#463f2e" : root.spaceStyle ? Commons.Color.foreground : root.foreground
+          style: root.nierStyle || root.spaceStyle ? Text.Normal : Text.Outline
           styleColor: Util.alpha(root.dimColor, 0.7)
-          font.pixelSize: root.nierStyle ? 13 : Style.font.display
-          font.weight: root.nierStyle ? Font.Normal : Font.DemiBold
-          font.family: root.nierStyle ? root.nierFont : Style.font.family
-          font.letterSpacing: root.nierStyle ? 3 : 0
+          font.pixelSize: root.nierStyle ? 13 : root.spaceStyle ? 13 : Style.font.display
+          font.weight: root.nierStyle || root.spaceStyle ? Font.Normal : Font.DemiBold
+          font.family: root.nierStyle ? root.nierFont : root.spaceStyle ? root.spaceFont : Style.font.family
+          font.letterSpacing: root.nierStyle ? 3 : root.spaceStyle ? 2 : 0
+          font.capitalization: root.spaceStyle ? Font.AllUppercase : Font.MixedCase
           horizontalAlignment: Text.AlignHCenter
           elide: Text.ElideRight
         }
