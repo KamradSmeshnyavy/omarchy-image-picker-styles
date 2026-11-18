@@ -15,7 +15,7 @@
 
 `space` — HUD райса Space (по мотивам стиля Space из [elifouts/Dotfiles](https://github.com/elifouts/Dotfiles), GPL-3.0): квадратные карточки на тёмной вуали цвета фона, выбранная — в рамке акцентом с уголками, служебные строки капсом по углам (WORLD SELECT, монитор, n / m WORLDS, клавиши).
 
-`crt` — экран SCREENS райса Retro CRT (по мотивам стиля Retro из [elifouts/Dotfiles](https://github.com/elifouts/Dotfiles), GPL-3.0): двойная рамка во весь экран с заголовком SCREENS, прямые миниатюры в рамках цвета трубки, подписи и подсказки Terminess.
+`crt` — его пикер SCREENS (`CrtScreens.qml`): папки его библиотеки (`omarchy-crt-library`), избранное, сетка в 4 колонки в цвет акцента, PREVIEW через фильтр трубки, APPLY / FAVORITE / FILTER; темы по-прежнему выбираются каруселью.
 
 ## Установка
 

@@ -170,6 +170,7 @@ Item {
   function focusPicker() {
     if (root.opened && root.imagesLoaded && root.layoutSettled) {
       if (root.glyphStyle && glyphView.item) glyphView.item.focusIn()
+      else if (root.crtScreensMode && crtScreens.item) crtScreens.item.focusIn()
       else carousel.forceActiveFocus()
     }
   }
@@ -269,6 +270,20 @@ Item {
     if (!path) return
     doneFilesToRelease.push(path)
     releaseNextDoneFile()
+  }
+
+  // crt: экран SCREENS (CrtScreens.qml) — его пикер обоев вместо карусели; темы — по-прежнему каруселью
+  readonly property bool crtScreensMode: crtStyle && !showLabels  // обои (выбор тем и plymouth — с подписями)
+  // готовый путь в файл выбора (CrtScreens уже поставил обои сам)
+  function finishWith(path) {
+    if (!selectionFile) { cancel(); return }
+    var activeSelectionFile = selectionFile, activeDoneFile = doneFile
+    applySerial = requestSerial
+    requestActive = false
+    selectionFile = ""
+    doneFile = ""
+    applyProc.command = ["bash", "-c", "printf '%s\\n' " + Util.shellQuote(path) + " > " + Util.shellQuote(activeSelectionFile) + "; : > " + Util.shellQuote(activeDoneFile)]
+    applyProc.running = true
   }
 
   function applySelected() {
@@ -558,7 +573,7 @@ Item {
       id: crtFrame
       anchors.fill: parent
       anchors.margins: 48
-      visible: root.crtStyle && root.opened && root.imagesLoaded
+      visible: root.crtStyle && !root.crtScreensMode && root.opened && root.imagesLoaded
       readonly property color line: Util.alpha(Commons.Color.accent, 0.55)
       Rectangle { anchors.fill: parent; color: "transparent"; border.width: 1; border.color: crtFrame.line }
       Rectangle { anchors.fill: parent; anchors.margins: 3; color: "transparent"; border.width: 1; border.color: crtFrame.line }
@@ -657,7 +672,7 @@ Item {
 
     Item {
       id: card
-      visible: root.opened && root.imagesLoaded && root.layoutSettled && root.imageArray.length > 0 && !root.glyphStyle
+      visible: root.opened && root.imagesLoaded && root.layoutSettled && root.imageArray.length > 0 && !root.glyphStyle && !root.crtScreensMode
       // honeycomb — почти весь экран: сетка сот.
       width: root.honeycomb ? parent.width - 120 : Math.min(parent.width - 80, root.expandedWidth + 13 * (root.sliceWidth + root.sliceSpacing) + 40)
       height: root.honeycomb ? parent.height - 140 : root.expandedHeight + Style.space(30) + root.bottomChromeHeight
@@ -1046,6 +1061,13 @@ Item {
       active: root.glyphStyle && root.opened && root.imagesLoaded && root.layoutSettled && root.imageArray.length > 0
       sourceComponent: Glyph.GlyphWalls { picker: root }
       onLoaded: root.focusPicker()
+    }
+    Loader {
+      id: crtScreens
+      anchors.fill: parent
+      active: root.crtScreensMode && root.opened && root.imagesLoaded
+      sourceComponent: CrtScreens { picker: root }
+      onLoaded: item.focusIn()
     }
   }
 }
