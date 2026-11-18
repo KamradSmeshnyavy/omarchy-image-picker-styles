@@ -49,11 +49,11 @@ Item {
   property color dimColor: Commons.Color.background
   property color foreground: Commons.Color.imagePicker.text
   property color scrim: Commons.Color.imagePicker.scrim
-  property color selectedBorder: nierStyle ? "#463f2e" : spaceStyle ? Commons.Color.accent : Commons.Color.imagePicker.selectedBorder
-  property color unselectedBorder: nierStyle ? Qt.rgba(70 / 255, 63 / 255, 46 / 255, 0.5) : spaceStyle ? Util.alpha(Commons.Color.accent, 0.25) : Commons.Color.imagePicker.unselectedBorder
+  property color selectedBorder: nierStyle ? "#463f2e" : spaceStyle || crtStyle ? Commons.Color.accent : Commons.Color.imagePicker.selectedBorder
+  property color unselectedBorder: nierStyle ? Qt.rgba(70 / 255, 63 / 255, 46 / 255, 0.5) : spaceStyle ? Util.alpha(Commons.Color.accent, 0.25) : crtStyle ? Util.alpha(Commons.Color.accent, 0.3) : Commons.Color.imagePicker.unselectedBorder
   // picker: вид из ~/.config/omarchy/image-picker.json — стиль-пресет и числа поверх него.
   //   style: slices (сток) | cards | coverflow | strip | wide | polaroid | honeycomb (соты, Vitreus) | dots (сборка из точек)
-  //          | glyph (переключатель обоев glyph-rice: превью на весь экран, лента кругов) | nier | space (HUD райса Space)
+  //          | glyph (переключатель обоев glyph-rice: превью на весь экран, лента кругов) | nier | space (HUD райса Space) | crt (экран SCREENS райса Retro CRT)
   property var pickerConfig: ({})
   readonly property var stylePresets: ({
     "slices":    { expandedWidth: 768,  expandedHeight: 475, sliceWidth: 108, sliceHeight: 432, spacing: -30,  skew: 28, radius: 0,  tilt: 0 },
@@ -74,9 +74,15 @@ Item {
     "nier":      { expandedWidth: 640,  expandedHeight: 400, sliceWidth: 200, sliceHeight: 300, spacing: 14,   skew: 0,  radius: 0,  tilt: 0 },
     // space: HUD райса Space (облик стиля Space из elifouts/Dotfiles, GPL-3.0): прямые углы, рамка выбранной акцентом и
     // уголки вокруг неё, тёмная вуаль цвета фона, служебные строки капсом вразрядку по углам, подпись — JetBrains Mono.
-    "space":     { expandedWidth: 720,  expandedHeight: 405, sliceWidth: 132, sliceHeight: 360, spacing: 12,   skew: 0,  radius: 0,  tilt: 0 }
+    "space":     { expandedWidth: 720,  expandedHeight: 405, sliceWidth: 132, sliceHeight: 360, spacing: 12,   skew: 0,  radius: 0,  tilt: 0 },
+    // crt: экран SCREENS райса Retro CRT (облик стиля Retro из elifouts/Dotfiles, GPL-3.0 — его wallpaper/Picker.qml и
+    // retro/picker-default.png): двойная рамка во весь экран с заголовком SCREENS, прямые миниатюры в рамке цветом
+    // трубки, выбранная — рамкой акцентом, подписи и подсказки Terminess капсом.
+    "crt":       { expandedWidth: 640,  expandedHeight: 360, sliceWidth: 156, sliceHeight: 300, spacing: 10,   skew: 0,  radius: 0,  tilt: 0 }
   })
   readonly property bool spaceStyle: pickerStyle === "space"
+  readonly property bool crtStyle: pickerStyle === "crt"
+  readonly property string crtFont: Qt.fontFamilies().indexOf("Terminess Nerd Font Mono") !== -1 ? "Terminess Nerd Font Mono" : "monospace"
   readonly property string spaceFont: Qt.fontFamilies().indexOf("JetBrainsMono Nerd Font") !== -1 ? "JetBrainsMono Nerd Font" : "monospace"
   readonly property bool nierStyle: pickerStyle === "nier"
   readonly property string nierFont: Qt.fontFamilies().indexOf("Share Tech Mono") !== -1 ? "Share Tech Mono" : "monospace"
@@ -131,7 +137,7 @@ Item {
   readonly property real cornerRadius: pickerNum("cardRadius", preset.radius)
   readonly property real tilt: pickerNum("tilt", preset.tilt)
   readonly property real dimUnselected: pickerNum("dim", 0.42)
-  readonly property int selectedBorderWidth: pickerNum("selectedBorder", spaceStyle ? 1 : 3)
+  readonly property int selectedBorderWidth: pickerNum("selectedBorder", spaceStyle || crtStyle ? 1 : 3)
   readonly property int animMs: pickerNum("animMs", 160)
   readonly property real scrimAlpha: pickerNum("scrimAlpha", -1)
   readonly property bool polaroid: pickerStyle === "polaroid"
@@ -506,7 +512,39 @@ Item {
       visible: root.opened && root.imagesLoaded && !root.glyphStyle
       // picker: своя плотность затемнения фона (scrimAlpha), -1 — из темы.
       color: root.nierStyle ? Qt.rgba(214 / 255, 207 / 255, 181 / 255, 0.9) : root.scrimAlpha >= 0 ? Util.alpha(root.scrim, root.scrimAlpha)
-        : root.spaceStyle ? Util.alpha(Commons.Color.background, 0.82) : root.scrim
+        : root.spaceStyle ? Util.alpha(Commons.Color.background, 0.82) : root.crtStyle ? Util.alpha(Commons.Color.background, 0.95) : root.scrim
+    }
+
+    // crt: двойная рамка SCREENS во весь экран, папка и счёт слева вверху, подсказки — в нижней черте
+    Item {
+      id: crtFrame
+      anchors.fill: parent
+      anchors.margins: 48
+      visible: root.crtStyle && root.opened && root.imagesLoaded
+      readonly property color line: Util.alpha(Commons.Color.accent, 0.55)
+      Rectangle { anchors.fill: parent; color: "transparent"; border.width: 1; border.color: crtFrame.line }
+      Rectangle { anchors.fill: parent; anchors.margins: 3; color: "transparent"; border.width: 1; border.color: crtFrame.line }
+      Rectangle {
+        x: 10; y: -height / 2; width: crtHead.implicitWidth + 12; height: crtHead.implicitHeight
+        color: Util.alpha(Commons.Color.background, 0.95)
+        Text { id: crtHead; x: 6; text: "SCREENS"; font.family: root.crtFont; font.pixelSize: 14; font.letterSpacing: 1; color: Commons.Color.accent }
+      }
+      Rectangle {
+        anchors.right: parent.right; anchors.rightMargin: 10; y: parent.height - height / 2
+        width: crtTail.implicitWidth + 12; height: crtTail.implicitHeight
+        color: Util.alpha(Commons.Color.background, 0.95)
+        Text { id: crtTail; x: 6; text: "ENTER-APPLY   ←→-SELECT   ESC-END"; font.family: root.crtFont; font.pixelSize: 11; font.letterSpacing: 1; color: Util.alpha(Commons.Color.foreground, 0.5) }
+      }
+      Column {
+        x: 22; y: 28; spacing: 4
+        Text { text: "folder:"; font.family: root.crtFont; font.pixelSize: 14; color: Util.alpha(Commons.Color.foreground, 0.5) }
+        Text { text: "1  all"; font.family: root.crtFont; font.pixelSize: 14; color: Commons.Color.foreground }
+      }
+      Text {
+        anchors { right: parent.right; rightMargin: 22; top: parent.top; topMargin: 28 }
+        text: (root.imageArray.length ? root.selectedFilteredPosition() + 1 : 0) + " / " + root.imageArray.length
+        font.family: root.crtFont; font.pixelSize: 14; color: Commons.Color.accent
+      }
     }
 
     // space: служебные строки HUD по углам и уголки экрана
@@ -902,14 +940,14 @@ Item {
           anchors.horizontalCenter: carousel.horizontalCenter
           width: root.expandedWidth
           text: root.currentLabel()
-          color: root.nierStyle ? "#463f2e" : root.spaceStyle ? Commons.Color.foreground : root.foreground
-          style: root.nierStyle || root.spaceStyle ? Text.Normal : Text.Outline
+          color: root.nierStyle ? "#463f2e" : root.spaceStyle ? Commons.Color.foreground : root.crtStyle ? Commons.Color.accent : root.foreground
+          style: root.nierStyle || root.spaceStyle || root.crtStyle ? Text.Normal : Text.Outline
           styleColor: Util.alpha(root.dimColor, 0.7)
-          font.pixelSize: root.nierStyle ? 13 : root.spaceStyle ? 13 : Style.font.display
-          font.weight: root.nierStyle || root.spaceStyle ? Font.Normal : Font.DemiBold
-          font.family: root.nierStyle ? root.nierFont : root.spaceStyle ? root.spaceFont : Style.font.family
-          font.letterSpacing: root.nierStyle ? 3 : root.spaceStyle ? 2 : 0
-          font.capitalization: root.spaceStyle ? Font.AllUppercase : Font.MixedCase
+          font.pixelSize: root.nierStyle ? 13 : root.spaceStyle ? 13 : root.crtStyle ? 15 : Style.font.display
+          font.weight: root.nierStyle || root.spaceStyle || root.crtStyle ? Font.Normal : Font.DemiBold
+          font.family: root.nierStyle ? root.nierFont : root.spaceStyle ? root.spaceFont : root.crtStyle ? root.crtFont : Style.font.family
+          font.letterSpacing: root.nierStyle ? 3 : root.spaceStyle ? 2 : root.crtStyle ? 1 : 0
+          font.capitalization: root.spaceStyle || root.crtStyle ? Font.AllUppercase : Font.MixedCase
           horizontalAlignment: Text.AlignHCenter
           elide: Text.ElideRight
         }

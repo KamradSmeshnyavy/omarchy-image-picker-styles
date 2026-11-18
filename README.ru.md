@@ -15,6 +15,8 @@
 
 `space` — HUD райса Space (по мотивам стиля Space из [elifouts/Dotfiles](https://github.com/elifouts/Dotfiles), GPL-3.0): квадратные карточки на тёмной вуали цвета фона, выбранная — в рамке акцентом с уголками, служебные строки капсом по углам (WORLD SELECT, монитор, n / m WORLDS, клавиши).
 
+`crt` — экран SCREENS райса Retro CRT (по мотивам стиля Retro из [elifouts/Dotfiles](https://github.com/elifouts/Dotfiles), GPL-3.0): двойная рамка во весь экран с заголовком SCREENS, прямые миниатюры в рамках цвета трубки, подписи и подсказки Terminess.
+
 ## Установка
 
 ```sh

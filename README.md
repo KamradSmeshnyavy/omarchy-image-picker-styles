@@ -16,6 +16,8 @@ unchanged.
 
 `space` — the HUD of the Space rice (after the Space style of [elifouts/Dotfiles](https://github.com/elifouts/Dotfiles), GPL-3.0): square cards over a dark veil in the theme background, the selected one framed in the accent with corner brackets, service lines in uppercase in the corners (WORLD SELECT, the monitor, n / m WORLDS, the keys).
 
+`crt` — the SCREENS screen of the Retro CRT rice (after the Retro style of [elifouts/Dotfiles](https://github.com/elifouts/Dotfiles), GPL-3.0): a double frame over the whole screen titled SCREENS, square thumbnails in tube-coloured frames, Terminess captions and hints.
+
 ## Install
 
 ```sh
