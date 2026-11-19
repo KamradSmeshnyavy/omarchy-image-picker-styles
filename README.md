@@ -16,6 +16,8 @@ unchanged.
 
 `space` — the HUD of the Space rice (after the Space style of [elifouts/Dotfiles](https://github.com/elifouts/Dotfiles), GPL-3.0): square cards over a dark veil in the theme background, the selected one framed in the accent with corner brackets, service lines in uppercase in the corners (WORLD SELECT, the monitor, n / m WORLDS, the keys).
 
+`modern` — his Modern wallpaper picker (`ModernWalls.qml`): a panel rising from the bottom, fading into the theme background, the picked wallpaper previewed full-screen, folder chips (all / favorites / his library / theme), a carousel with the current one larger, its name and its 16 pywal colors; Enter sets it through `omarchy-modern-colors --wallpaper` (recolors when the colors are Pywal); themes are still picked with the carousel.
+
 `crt` — his SCREENS picker (`CrtScreens.qml`): folders of his library (`omarchy-crt-library`), favorites, a 4-column grid tinted with the accent, a PREVIEW run through the tube filter, APPLY / FAVORITE / FILTER; themes are still picked with the carousel.
 
 ## Install

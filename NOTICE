@@ -19,5 +19,7 @@ This project includes or is based on:
 - Vitreus — https://github.com/natepayn3/Vitreus
   MIT License. The honeycomb style follows its hexagon wallpaper grid (own code).
 
+- ModernWalls.qml (style modern, wallpapers): after his Modern/wallpaper-picker/shell.qml from elifouts/Dotfiles
+  (GPL-3.0), own code.
 - CrtScreens.qml (style crt, wallpapers): his Retro/wallpaper/Picker.qml from elifouts/Dotfiles
   (https://github.com/elifouts/Dotfiles), Copyright (c) Eli Fouts, GPL-3.0 — adapted to our picker and omarchy-crt-*.

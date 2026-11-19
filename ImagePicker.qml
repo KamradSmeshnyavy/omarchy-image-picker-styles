@@ -78,10 +78,15 @@ Item {
     // crt: экран SCREENS райса Retro CRT (облик стиля Retro из elifouts/Dotfiles, GPL-3.0 — его wallpaper/Picker.qml и
     // retro/picker-default.png): двойная рамка во весь экран с заголовком SCREENS, прямые миниатюры в рамке цветом
     // трубки, выбранная — рамкой акцентом, подписи и подсказки Terminess капсом.
-    "crt":       { expandedWidth: 640,  expandedHeight: 360, sliceWidth: 156, sliceHeight: 300, spacing: 10,   skew: 0,  radius: 0,  tilt: 0 }
+    "crt":       { expandedWidth: 640,  expandedHeight: 360, sliceWidth: 156, sliceHeight: 300, spacing: 10,   skew: 0,  radius: 0,  tilt: 0 },
+    // modern: обои — ModernWalls.qml (его карусель снизу), темы — скруглённые карточки
+    "modern":    { expandedWidth: 640,  expandedHeight: 360, sliceWidth: 150, sliceHeight: 300, spacing: 14,   skew: 0,  radius: 14, tilt: 0 }
   })
   readonly property bool spaceStyle: pickerStyle === "space"
   readonly property bool crtStyle: pickerStyle === "crt"
+  // modern: его пикер обоев Modern (ModernWalls.qml) — карусель снизу с превью на весь экран; темы — каруселью
+  readonly property bool modernStyle: pickerStyle === "modern"
+  readonly property bool modernWallsMode: modernStyle && !showLabels
   readonly property string crtFont: Qt.fontFamilies().indexOf("Terminess Nerd Font Mono") !== -1 ? "Terminess Nerd Font Mono" : "monospace"
   readonly property string spaceFont: Qt.fontFamilies().indexOf("JetBrainsMono Nerd Font") !== -1 ? "JetBrainsMono Nerd Font" : "monospace"
   readonly property bool nierStyle: pickerStyle === "nier"
@@ -171,6 +176,7 @@ Item {
     if (root.opened && root.imagesLoaded && root.layoutSettled) {
       if (root.glyphStyle && glyphView.item) glyphView.item.focusIn()
       else if (root.crtScreensMode && crtScreens.item) crtScreens.item.focusIn()
+      else if (root.modernWallsMode && modernWalls.item) modernWalls.item.focusIn()
       else carousel.forceActiveFocus()
     }
   }
@@ -561,7 +567,7 @@ Item {
 
     Rectangle {
       anchors.fill: parent
-      visible: root.opened && root.imagesLoaded && !root.glyphStyle
+      visible: root.opened && root.imagesLoaded && !root.glyphStyle && !root.modernWallsMode
       // picker: своя плотность затемнения фона (scrimAlpha), -1 — из темы.
       color: root.nierStyle ? Qt.rgba(214 / 255, 207 / 255, 181 / 255, 0.9) : root.crtStyle ? Util.alpha(Commons.Color.background, 0.95)
         : root.scrimAlpha >= 0 ? Util.alpha(root.scrim, root.scrimAlpha)
@@ -672,7 +678,7 @@ Item {
 
     Item {
       id: card
-      visible: root.opened && root.imagesLoaded && root.layoutSettled && root.imageArray.length > 0 && !root.glyphStyle && !root.crtScreensMode
+      visible: root.opened && root.imagesLoaded && root.layoutSettled && root.imageArray.length > 0 && !root.glyphStyle && !root.crtScreensMode && !root.modernWallsMode
       // honeycomb — почти весь экран: сетка сот.
       width: root.honeycomb ? parent.width - 120 : Math.min(parent.width - 80, root.expandedWidth + 13 * (root.sliceWidth + root.sliceSpacing) + 40)
       height: root.honeycomb ? parent.height - 140 : root.expandedHeight + Style.space(30) + root.bottomChromeHeight
@@ -1067,6 +1073,13 @@ Item {
       anchors.fill: parent
       active: root.crtScreensMode && root.opened && root.imagesLoaded
       sourceComponent: CrtScreens { picker: root }
+      onLoaded: item.focusIn()
+    }
+    Loader {
+      id: modernWalls
+      anchors.fill: parent
+      active: root.modernWallsMode && root.opened && root.imagesLoaded
+      sourceComponent: ModernWalls { picker: root }
       onLoaded: item.focusIn()
     }
   }

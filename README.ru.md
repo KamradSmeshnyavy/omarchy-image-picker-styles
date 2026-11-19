@@ -15,6 +15,8 @@
 
 `space` — HUD райса Space (по мотивам стиля Space из [elifouts/Dotfiles](https://github.com/elifouts/Dotfiles), GPL-3.0): квадратные карточки на тёмной вуали цвета фона, выбранная — в рамке акцентом с уголками, служебные строки капсом по углам (WORLD SELECT, монитор, n / m WORLDS, клавиши).
 
+`modern` — его пикер обоев Modern (`ModernWalls.qml`): панель снизу с затуханием в фон темы, выбранные обои — превью на весь экран, папки (all / favorites / его библиотека / theme), карусель с крупной текущей, её имя и 16 цветов pywal; Enter ставит через `omarchy-modern-colors --wallpaper` (при цветах Pywal — с перекраской); темы по-прежнему выбираются каруселью.
+
 `crt` — его пикер SCREENS (`CrtScreens.qml`): папки его библиотеки (`omarchy-crt-library`), избранное, сетка в 4 колонки в цвет акцента, PREVIEW через фильтр трубки, APPLY / FAVORITE / FILTER; темы по-прежнему выбираются каруселью.
 
 ## Установка
